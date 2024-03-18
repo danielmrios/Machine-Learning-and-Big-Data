@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.433">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Project 2</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="Project2_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Project2_files/libs/quarto-html/quarto.js"></script>
+<script src="Project2_files/libs/quarto-html/popper.min.js"></script>
+<script src="Project2_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Project2_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Project2_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Project2_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Project2_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Project2_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Project2_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Project 2</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="project-2" class="level2">
+<h2 class="anchored" data-anchor-id="project-2">Project 2</h2>
+<p>A new real estate business wants to better understand the King County real estate market. We are going to explore the data and build a suitable model that predicts home prices to help them determine what factors determine home prices in King County.</p>
+<p>The data includes sale prices in King County between May 2014 and May 2015 and contains information on the time of sale, features &amp; specs of house, location, and other grading scales.</p>
+<p>General Preparation &amp; Exploration</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># load libraries </span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rpart)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rpart.plot)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(forecast)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Registered S3 method overwritten by 'quantmod':
+  method            from
+  as.zoo.data.frame zoo </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: ggplot2</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: lattice</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># read house price csv </span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"house_23.csv"</span>, <span class="at">header =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># investigate variables</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   15053 obs. of  23 variables:
+ $ X            : int  1 2 3 4 5 6 7 8 9 10 ...
+ $ id           : num  3.74e+09 1.94e+09 1.42e+09 7.45e+09 2.65e+09 ...
+ $ Year         : int  2014 2014 2014 2014 2014 2014 2015 2014 2014 2014 ...
+ $ Month        : int  5 7 9 8 5 11 3 6 6 7 ...
+ $ Day          : int  23 17 10 11 21 3 16 18 10 25 ...
+ $ day_of_week  : int  5 4 3 1 3 1 1 3 2 5 ...
+ $ price        : num  449950 635000 450000 280000 1220000 ...
+ $ bedrooms     : int  3 4 3 2 4 5 2 3 3 3 ...
+ $ bathrooms    : num  2 2 1 1 2.5 1.75 1 1 2 1.5 ...
+ $ sqft_living  : int  1560 2260 1290 720 3240 2080 960 1130 1320 2150 ...
+ $ sqft_lot     : int  4080 8457 47044 5000 3600 217800 2700 12519 7200 4000 ...
+ $ floors       : num  2 2 1 1 2 1 1 1 1 1.5 ...
+ $ waterfront   : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ view         : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ condition    : int  3 3 3 5 3 5 3 3 5 3 ...
+ $ grade        : int  7 9 7 6 9 7 6 7 7 7 ...
+ $ sqft_above   : int  1560 2260 1150 720 2060 2080 780 1130 1320 1470 ...
+ $ sqft_basement: int  0 0 140 0 1180 0 180 0 0 680 ...
+ $ yr_built     : int  1923 1992 1968 1951 2008 1963 1904 1958 1975 1928 ...
+ $ yr_renovated : int  1982 0 0 0 0 0 0 0 0 0 ...
+ $ zipcode      : int  98115 98074 98029 98126 98109 98070 98144 98056 98031 98144 ...
+ $ lat          : num  47.7 47.6 47.6 47.5 47.6 ...
+ $ long         : num  -122 -122 -122 -122 -122 ...</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># data transformations </span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># set waterfront variable as factor </span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>waterfront <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(data<span class="sc">$</span>waterfront)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="co"># set month variable as factor </span></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>Month <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(data<span class="sc">$</span>Month)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co"># set day variable as factor </span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>Day <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(data<span class="sc">$</span>Day)</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a><span class="co"># set day of week variable as factor </span></span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>day_of_week <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(data<span class="sc">$</span>day_of_week)</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a><span class="co"># set zip variable as factor </span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>zipcode <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(data<span class="sc">$</span>zipcode)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># training validation split </span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">666</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>train_index <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(data), <span class="fl">0.7</span> <span class="sc">*</span> <span class="fu">nrow</span>(data))</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>valid_index <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(data), train_index)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>train_df <span class="ot">&lt;-</span> data[train_index, ]</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>valid_df <span class="ot">&lt;-</span> data[valid_index, ]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># feature selection </span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="co"># correlation table </span></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(data[<span class="fu">sapply</span>(data,is.numeric)]) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                          X           id         Year        price
+X              1.0000000000 -0.005414826  0.001254584  0.016726039
+id            -0.0054148261  1.000000000  0.010904637 -0.019868419
+Year           0.0012545837  0.010904637  1.000000000  0.008222899
+price          0.0167260389 -0.019868419  0.008222899  1.000000000
+bedrooms      -0.0002057748  0.002322950 -0.016606212  0.304908365
+bathrooms      0.0021401824  0.006479200 -0.030619192  0.524901122
+sqft_living    0.0054700235 -0.014557467 -0.032007745  0.696024364
+sqft_lot       0.0037531529 -0.134834517  0.006471956  0.094682264
+floors         0.0016236058  0.021020063 -0.021884882  0.260738883
+view           0.0094863226  0.012212331  0.001050716  0.398015811
+condition      0.0027061227 -0.027482713 -0.039569707  0.037138137
+grade          0.0112525502  0.002393621 -0.028485039  0.670653446
+sqft_above     0.0038075180 -0.010437755 -0.024124822  0.605498400
+sqft_basement  0.0041949965 -0.010598001 -0.021118543  0.308934556
+yr_built      -0.0057841334  0.024248569  0.002874183  0.048044185
+yr_renovated   0.0146075914 -0.013250576 -0.024180113  0.124346780
+lat           -0.0001371881 -0.009297105 -0.032964156  0.314304854
+long          -0.0033881984  0.021477417 -0.004387981  0.017502854
+                   bedrooms    bathrooms  sqft_living     sqft_lot       floors
+X             -0.0002057748  0.002140182  0.005470023  0.003753153  0.001623606
+id             0.0023229505  0.006479200 -0.014557467 -0.134834517  0.021020063
+Year          -0.0166062117 -0.030619192 -0.032007745  0.006471956 -0.021884882
+price          0.3049083646  0.524901122  0.696024364  0.094682264  0.260738883
+bedrooms       1.0000000000  0.508879668  0.572998835  0.030367113  0.172926547
+bathrooms      0.5088796679  1.000000000  0.754121254  0.086762404  0.499199730
+sqft_living    0.5729988352  0.754121254  1.000000000  0.173177667  0.350276296
+sqft_lot       0.0303671133  0.086762404  0.173177667  1.000000000 -0.008941148
+floors         0.1729265474  0.499199730  0.350276296 -0.008941148  1.000000000
+view           0.0747265683  0.186191130  0.282442652  0.073270002  0.026097570
+condition      0.0198581377 -0.131938023 -0.060353396 -0.016173045 -0.263241922
+grade          0.3545692807  0.664461094  0.760944083  0.111703100  0.456836377
+sqft_above     0.4723656402  0.688001415  0.874720645  0.181708263  0.525913411
+sqft_basement  0.3028381844  0.275334823  0.434970684  0.019166541 -0.255510379
+yr_built       0.1523724562  0.505059203  0.313033642  0.051971708  0.486081704
+yr_renovated   0.0124218520  0.051776979  0.050215952  0.009116153  0.004989853
+lat           -0.0037987181  0.022600980  0.055580462 -0.072284322  0.052975587
+long           0.1294339661  0.223839532  0.238203773  0.222802118  0.128593960
+                      view    condition        grade   sqft_above sqft_basement
+X              0.009486323  0.002706123  0.011252550  0.003807518   0.004194997
+id             0.012212331 -0.027482713  0.002393621 -0.010437755  -0.010598001
+Year           0.001050716 -0.039569707 -0.028485039 -0.024124822  -0.021118543
+price          0.398015811  0.037138137  0.670653446  0.605498400   0.308934556
+bedrooms       0.074726568  0.019858138  0.354569281  0.472365640   0.302838184
+bathrooms      0.186191130 -0.131938023  0.664461094  0.688001415   0.275334823
+sqft_living    0.282442652 -0.060353396  0.760944083  0.874720645   0.434970684
+sqft_lot       0.073270002 -0.016173045  0.111703100  0.181708263   0.019166541
+floors         0.026097570 -0.263241922  0.456836377  0.525913411  -0.255510379
+view           1.000000000  0.045251788  0.251702107  0.166511227   0.272512081
+condition      0.045251788  1.000000000 -0.149389241 -0.160686312   0.174216508
+grade          0.251702107 -0.149389241  1.000000000  0.756736760   0.161680078
+sqft_above     0.166511227 -0.160686312  0.756736760  1.000000000  -0.055902366
+sqft_basement  0.272512081  0.174216508  0.161680078 -0.055902366   1.000000000
+yr_built      -0.056869810 -0.355281261  0.442574372  0.421294059  -0.137853995
+yr_renovated   0.111842424 -0.063006068  0.017110115  0.021413589   0.063668853
+lat            0.004679490 -0.018265842  0.114487016  0.003965432   0.107139809
+long          -0.082222386 -0.104821432  0.199131813  0.342010126  -0.144708875
+                  yr_built yr_renovated           lat         long
+X             -0.005784133  0.014607591 -0.0001371881 -0.003388198
+id             0.024248569 -0.013250576 -0.0092971046  0.021477417
+Year           0.002874183 -0.024180113 -0.0329641561 -0.004387981
+price          0.048044185  0.124346780  0.3143048543  0.017502854
+bedrooms       0.152372456  0.012421852 -0.0037987181  0.129433966
+bathrooms      0.505059203  0.051776979  0.0226009801  0.223839532
+sqft_living    0.313033642  0.050215952  0.0555804617  0.238203773
+sqft_lot       0.051971708  0.009116153 -0.0722843219  0.222802118
+floors         0.486081704  0.004989853  0.0529755869  0.128593960
+view          -0.056869810  0.111842424  0.0046794903 -0.082222386
+condition     -0.355281261 -0.063006068 -0.0182658422 -0.104821432
+grade          0.442574372  0.017110115  0.1144870156  0.199131813
+sqft_above     0.421294059  0.021413589  0.0039654316  0.342010126
+sqft_basement -0.137853995  0.063668853  0.1071398095 -0.144708875
+yr_built       1.000000000 -0.229696365 -0.1533837665  0.411246285
+yr_renovated  -0.229696365  1.000000000  0.0352023875 -0.072077776
+lat           -0.153383767  0.035202387  1.0000000000 -0.135233628
+long           0.411246285 -0.072077776 -0.1352336278  1.000000000</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># correlation matrix</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(corrgram)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'corrgram'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:lattice':
+
+    panel.fill</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(forecast)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cor</span>(train_df[<span class="fu">sapply</span>(train_df,is.numeric)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                          X           id         Year       price     bedrooms
+X              1.0000000000 -0.004003156 -0.001818615  0.01062993  0.006331516
+id            -0.0040031558  1.000000000  0.011474559 -0.02379940  0.005119694
+Year          -0.0018186149  0.011474559  1.000000000  0.01006309 -0.012965962
+price          0.0106299298 -0.023799402  0.010063090  1.00000000  0.322811585
+bedrooms       0.0063315159  0.005119694 -0.012965962  0.32281159  1.000000000
+bathrooms     -0.0008376566  0.001778746 -0.025934052  0.51865632  0.527392668
+sqft_living    0.0010555313 -0.014985147 -0.029388118  0.69203188  0.592059908
+sqft_lot       0.0050470139 -0.134230437  0.002759645  0.09379780  0.027758090
+floors        -0.0094891301  0.023299177 -0.016351901  0.25596586  0.186194250
+view           0.0084001856  0.006771247 -0.002348583  0.38829370  0.079609464
+condition      0.0049446373 -0.021247318 -0.042258087  0.03626817  0.022797723
+grade          0.0040483037  0.006670724 -0.029130754  0.67776376  0.368207331
+sqft_above    -0.0048529738 -0.011272477 -0.022468181  0.59663327  0.491290599
+sqft_basement  0.0111620438 -0.009921964 -0.018789265  0.31728433  0.306935401
+yr_built      -0.0043381086  0.026349188  0.009339691  0.04045903  0.149631599
+yr_renovated   0.0087892233 -0.012495011 -0.026107493  0.12387521  0.016531677
+lat           -0.0011791753 -0.006278518 -0.032042942  0.32021331 -0.008964619
+long          -0.0057032281  0.030364330  0.002458045  0.01512388  0.130971703
+                  bathrooms  sqft_living     sqft_lot       floors         view
+X             -0.0008376566  0.001055531  0.005047014 -0.009489130  0.008400186
+id             0.0017787460 -0.014985147 -0.134230437  0.023299177  0.006771247
+Year          -0.0259340520 -0.029388118  0.002759645 -0.016351901 -0.002348583
+price          0.5186563195  0.692031882  0.093797799  0.255965863  0.388293696
+bedrooms       0.5273926680  0.592059908  0.027758090  0.186194250  0.079609464
+bathrooms      1.0000000000  0.750047860  0.078069596  0.497853524  0.174894950
+sqft_living    0.7500478603  1.000000000  0.164148105  0.348235047  0.277662163
+sqft_lot       0.0780695962  0.164148105  1.000000000 -0.008516914  0.078400083
+floors         0.4978535240  0.348235047 -0.008516914  1.000000000  0.015018208
+view           0.1748949496  0.277662163  0.078400083  0.015018208  1.000000000
+condition     -0.1306966992 -0.062289638 -0.023447880 -0.260298754  0.049898354
+grade          0.6642453246  0.759451744  0.110331324  0.456554961  0.241024781
+sqft_above     0.6846657207  0.874157019  0.175260267  0.524468414  0.160001162
+sqft_basement  0.2734482348  0.436229347  0.012742209 -0.255826029  0.274392490
+yr_built       0.5002128116  0.306256234  0.050008171  0.488514987 -0.059527860
+yr_renovated   0.0532936735  0.051553708  0.009693316 -0.001586742  0.101989790
+lat            0.0185024748  0.052613819 -0.077824600  0.048733283 -0.004673801
+long           0.2181473503  0.231921773  0.217591861  0.130503218 -0.076040622
+                 condition        grade   sqft_above sqft_basement     yr_built
+X              0.004944637  0.004048304 -0.004852974   0.011162044 -0.004338109
+id            -0.021247318  0.006670724 -0.011272477  -0.009921964  0.026349188
+Year          -0.042258087 -0.029130754 -0.022468181  -0.018789265  0.009339691
+price          0.036268170  0.677763758  0.596633266   0.317284326  0.040459029
+bedrooms       0.022797723  0.368207331  0.491290599   0.306935401  0.149631599
+bathrooms     -0.130696699  0.664245325  0.684665721   0.273448235  0.500212812
+sqft_living   -0.062289638  0.759451744  0.874157019   0.436229347  0.306256234
+sqft_lot      -0.023447880  0.110331324  0.175260267   0.012742209  0.050008171
+floors        -0.260298754  0.456554961  0.524468414  -0.255826029  0.488514987
+view           0.049898354  0.241024781  0.160001162   0.274392490 -0.059527860
+condition      1.000000000 -0.155194308 -0.163253629   0.174425021 -0.365549598
+grade         -0.155194308  1.000000000  0.755716250   0.161134368  0.438072438
+sqft_above    -0.163253629  0.755716250  1.000000000  -0.055666228  0.418335084
+sqft_basement  0.174425021  0.161134368 -0.055666228   1.000000000 -0.145480005
+yr_built      -0.365549598  0.438072438  0.418335084  -0.145480005  1.000000000
+yr_renovated  -0.061028016  0.017205126  0.019811241   0.069283167 -0.230107204
+lat           -0.015877826  0.112386546 -0.001080292   0.110172039 -0.161423729
+long          -0.111238068  0.196766101  0.336346158  -0.146391482  0.408420393
+              yr_renovated          lat         long
+X              0.008789223 -0.001179175 -0.005703228
+id            -0.012495011 -0.006278518  0.030364330
+Year          -0.026107493 -0.032042942  0.002458045
+price          0.123875212  0.320213308  0.015123880
+bedrooms       0.016531677 -0.008964619  0.130971703
+bathrooms      0.053293673  0.018502475  0.218147350
+sqft_living    0.051553708  0.052613819  0.231921773
+sqft_lot       0.009693316 -0.077824600  0.217591861
+floors        -0.001586742  0.048733283  0.130503218
+view           0.101989790 -0.004673801 -0.076040622
+condition     -0.061028016 -0.015877826 -0.111238068
+grade          0.017205126  0.112386546  0.196766101
+sqft_above     0.019811241 -0.001080292  0.336346158
+sqft_basement  0.069283167  0.110172039 -0.146391482
+yr_built      -0.230107204 -0.161423729  0.408420393
+yr_renovated   1.000000000  0.037170890 -0.071848287
+lat            0.037170890  1.000000000 -0.139632344
+long          -0.071848287 -0.139632344  1.000000000</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co">#pairs(price ~ ., data = train_df[,c(2:23)], pch = ".")</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">corrgram</span>(train_df[,<span class="fu">c</span>(<span class="dv">2</span><span class="sc">:</span><span class="dv">23</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Project2_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Variables used</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="co"># grade - higher the better and likely a good predictor of price. </span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="co"># view - houses with a waterfront view likely to be higher in price. </span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co"># bathrooms - price likely to increase as number gets larger.</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="co"># bedrooms - price likely to increase as number gets larger. </span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="co"># sqft_living - value likely to increase as house gets bigger.</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="co"># yr_built - newer houses are likely to be more expensive.</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="co"># sqft_lot - value likely to increase as lot gets bigger. </span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="co"># zipcode - certain areas are more/less expensive than others.</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="co"># lat - areas in northern king county could be more expensive.</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Model 1: Regression Tree</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Increase complexity parameter (cp) to create a larger and more complex tree</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>regress_tr_large <span class="ot">&lt;-</span> <span class="fu">rpart</span>(price <span class="sc">~</span> grade <span class="sc">+</span> view <span class="sc">+</span> bathrooms <span class="sc">+</span> sqft_living <span class="sc">+</span> yr_built <span class="sc">+</span> sqft_lot <span class="sc">+</span> zipcode,</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">data =</span> train_df, <span class="at">method =</span> <span class="st">"anova"</span>, <span class="at">cp =</span> <span class="fl">0.0001</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Visualize the larger tree</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="fu">rpart.plot</span>(regress_tr_large, <span class="at">type =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: labs do not fit even at cex 0.15, there may be some overplotting</code></pre>
+</div>
+<div class="cell-output-display">
+<p><img src="Project2_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the dataset seems to be more optimal for a more complex model, as the optimal complexity paramter in relation to cross-validation error is close to 0.0001</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plotcp</span>(regress_tr_large)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Project2_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">printcp</span>(regress_tr_large)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Regression tree:
+rpart(formula = price ~ grade + view + bathrooms + sqft_living + 
+    yr_built + sqft_lot + zipcode, data = train_df, method = "anova", 
+    cp = 1e-04)
+
+Variables actually used in tree construction:
+[1] bathrooms   grade       sqft_living sqft_lot    view        yr_built   
+[7] zipcode    
+
+Root node error: 1.3496e+15/10537 = 1.2808e+11
+
+n= 10537 
+
+            CP nsplit rel error  xerror     xstd
+1   0.33364328      0   1.00000 1.00021 0.043052
+2   0.12166390      1   0.66636 0.66685 0.030609
+3   0.08402084      2   0.54469 0.55561 0.023748
+4   0.08187922      3   0.46067 0.47644 0.022955
+5   0.02197413      4   0.37879 0.40042 0.017911
+6   0.01995841      5   0.35682 0.37005 0.017495
+7   0.01593230      6   0.33686 0.36449 0.017364
+8   0.01391350      7   0.32093 0.35461 0.017012
+9   0.01390653      8   0.30701 0.34407 0.016673
+10  0.01334822      9   0.29311 0.33846 0.016577
+11  0.00921239     10   0.27976 0.31075 0.016481
+12  0.00898751     11   0.27055 0.30470 0.016151
+13  0.00694598     12   0.26156 0.29422 0.014374
+14  0.00656584     13   0.25461 0.29062 0.014403
+15  0.00650449     14   0.24805 0.29008 0.014405
+16  0.00611032     15   0.24154 0.28618 0.014371
+17  0.00606296     16   0.23543 0.28345 0.014342
+18  0.00592008     17   0.22937 0.28047 0.014042
+19  0.00474634     18   0.22345 0.27513 0.014028
+20  0.00458158     19   0.21870 0.26808 0.014036
+21  0.00382646     20   0.21412 0.26196 0.013450
+22  0.00380858     21   0.21030 0.26143 0.013458
+23  0.00346391     22   0.20649 0.25966 0.013450
+24  0.00332946     23   0.20302 0.25743 0.013442
+25  0.00279410     24   0.19969 0.25405 0.013393
+26  0.00275529     25   0.19690 0.25367 0.013390
+27  0.00225273     26   0.19414 0.25336 0.013457
+28  0.00212575     27   0.19189 0.24661 0.013047
+29  0.00182037     28   0.18977 0.24324 0.012902
+30  0.00181270     29   0.18795 0.24168 0.012693
+31  0.00178290     30   0.18613 0.24109 0.012678
+32  0.00166882     31   0.18435 0.24151 0.012717
+33  0.00159240     32   0.18268 0.24027 0.012699
+34  0.00158444     33   0.18109 0.24192 0.012769
+35  0.00157420     34   0.17950 0.24188 0.012761
+36  0.00151703     35   0.17793 0.24111 0.012740
+37  0.00151161     36   0.17641 0.24025 0.012744
+38  0.00144697     39   0.17188 0.23954 0.012724
+39  0.00135255     40   0.17043 0.23818 0.012690
+40  0.00133935     41   0.16908 0.23675 0.012598
+41  0.00130734     42   0.16774 0.23588 0.012566
+42  0.00129150     43   0.16643 0.23519 0.012576
+43  0.00121374     44   0.16514 0.23386 0.012538
+44  0.00113301     45   0.16393 0.23086 0.012371
+45  0.00113062     46   0.16279 0.22948 0.012357
+46  0.00111364     47   0.16166 0.22945 0.012354
+47  0.00106626     49   0.15944 0.22865 0.012255
+48  0.00104859     50   0.15837 0.22828 0.012251
+49  0.00104521     51   0.15732 0.22795 0.012246
+50  0.00100501     52   0.15628 0.22717 0.012241
+51  0.00097589     53   0.15527 0.22605 0.012230
+52  0.00095130     54   0.15429 0.22498 0.012141
+53  0.00092016     55   0.15334 0.22437 0.012137
+54  0.00091056     56   0.15242 0.22402 0.012136
+55  0.00090174     57   0.15151 0.22402 0.012136
+56  0.00088017     58   0.15061 0.22343 0.012130
+57  0.00084612     59   0.14973 0.22239 0.012048
+58  0.00080064     60   0.14888 0.22275 0.012101
+59  0.00074794     61   0.14808 0.22145 0.012019
+60  0.00074312     62   0.14734 0.22057 0.011982
+61  0.00072777     63   0.14659 0.22016 0.011976
+62  0.00071943     64   0.14587 0.21961 0.011972
+63  0.00067858     65   0.14515 0.21903 0.011977
+64  0.00067563     66   0.14447 0.21866 0.011976
+65  0.00063000     67   0.14379 0.21830 0.011977
+66  0.00061099     68   0.14316 0.21700 0.011838
+67  0.00058775     69   0.14255 0.21682 0.011844
+68  0.00056289     70   0.14196 0.21578 0.011833
+69  0.00056146     71   0.14140 0.21530 0.011817
+70  0.00055172     72   0.14084 0.21530 0.011817
+71  0.00053525     73   0.14029 0.21496 0.011816
+72  0.00048979     74   0.13975 0.21442 0.011796
+73  0.00048798     75   0.13926 0.21358 0.011782
+74  0.00045420     76   0.13877 0.21325 0.011783
+75  0.00043597     77   0.13832 0.21325 0.011781
+76  0.00042614     78   0.13788 0.21365 0.011798
+77  0.00042600     79   0.13746 0.21338 0.011806
+78  0.00041861     80   0.13703 0.21315 0.011795
+79  0.00040500     81   0.13661 0.21302 0.011795
+80  0.00038390     82   0.13621 0.21272 0.011897
+81  0.00037493     83   0.13582 0.21274 0.011892
+82  0.00036844     84   0.13545 0.21255 0.011896
+83  0.00035979     86   0.13471 0.21243 0.011895
+84  0.00035282     87   0.13435 0.21248 0.011912
+85  0.00034973     88   0.13400 0.21222 0.011909
+86  0.00034050     89   0.13365 0.21219 0.011918
+87  0.00033258     90   0.13331 0.21206 0.011916
+88  0.00033082     91   0.13298 0.21206 0.011917
+89  0.00032096     92   0.13265 0.21142 0.011901
+90  0.00031963     93   0.13233 0.21153 0.011937
+91  0.00030918     94   0.13201 0.21126 0.011929
+92  0.00030244     95   0.13170 0.21133 0.011951
+93  0.00030050     96   0.13139 0.21106 0.011944
+94  0.00029954     97   0.13109 0.21106 0.011944
+95  0.00029928     98   0.13079 0.21106 0.011944
+96  0.00029606     99   0.13049 0.21102 0.011945
+97  0.00028817    100   0.13020 0.21097 0.011944
+98  0.00028416    101   0.12991 0.21085 0.011944
+99  0.00028358    102   0.12963 0.21087 0.011946
+100 0.00027965    104   0.12906 0.21084 0.011946
+101 0.00026356    105   0.12878 0.21024 0.011936
+102 0.00026133    106   0.12852 0.20971 0.011861
+103 0.00026034    107   0.12825 0.20971 0.011861
+104 0.00025696    108   0.12799 0.20973 0.011861
+105 0.00025382    109   0.12774 0.20954 0.011859
+106 0.00025131    110   0.12748 0.20945 0.011858
+107 0.00024380    111   0.12723 0.20918 0.011854
+108 0.00024197    112   0.12699 0.20873 0.011837
+109 0.00024115    113   0.12675 0.20867 0.011837
+110 0.00023741    114   0.12651 0.20853 0.011836
+111 0.00023334    115   0.12627 0.20772 0.011791
+112 0.00023141    116   0.12603 0.20749 0.011786
+113 0.00023123    117   0.12580 0.20763 0.011790
+114 0.00022111    118   0.12557 0.20734 0.011791
+115 0.00022109    119   0.12535 0.20718 0.011790
+116 0.00021760    120   0.12513 0.20704 0.011786
+117 0.00021734    121   0.12491 0.20707 0.011786
+118 0.00021700    122   0.12469 0.20707 0.011786
+119 0.00021329    123   0.12448 0.20690 0.011786
+120 0.00020835    124   0.12426 0.20686 0.011784
+121 0.00020758    125   0.12406 0.20686 0.011785
+122 0.00020352    126   0.12385 0.20692 0.011804
+123 0.00020310    127   0.12364 0.20699 0.011804
+124 0.00019919    128   0.12344 0.20681 0.011804
+125 0.00019684    129   0.12324 0.20716 0.011818
+126 0.00019173    130   0.12305 0.20728 0.011820
+127 0.00019007    131   0.12285 0.20684 0.011820
+128 0.00018812    132   0.12266 0.20698 0.011821
+129 0.00018767    133   0.12248 0.20685 0.011818
+130 0.00018711    134   0.12229 0.20685 0.011818
+131 0.00018696    135   0.12210 0.20692 0.011818
+132 0.00017611    136   0.12191 0.20658 0.011816
+133 0.00017379    137   0.12174 0.20653 0.011787
+134 0.00017293    138   0.12156 0.20658 0.011787
+135 0.00016984    139   0.12139 0.20651 0.011787
+136 0.00016776    141   0.12105 0.20636 0.011786
+137 0.00016472    142   0.12088 0.20636 0.011787
+138 0.00016463    143   0.12072 0.20648 0.011788
+139 0.00016093    145   0.12039 0.20652 0.011788
+140 0.00015421    146   0.12023 0.20646 0.011789
+141 0.00015348    147   0.12007 0.20626 0.011788
+142 0.00015240    148   0.11992 0.20614 0.011788
+143 0.00015024    149   0.11977 0.20617 0.011788
+144 0.00015004    150   0.11962 0.20610 0.011787
+145 0.00014637    151   0.11947 0.20610 0.011789
+146 0.00014594    152   0.11932 0.20594 0.011789
+147 0.00014529    153   0.11918 0.20598 0.011789
+148 0.00014472    154   0.11903 0.20598 0.011789
+149 0.00014049    155   0.11889 0.20593 0.011789
+150 0.00013790    158   0.11846 0.20614 0.011793
+151 0.00013117    159   0.11833 0.20560 0.011778
+152 0.00013026    160   0.11820 0.20546 0.011774
+153 0.00012972    161   0.11807 0.20537 0.011773
+154 0.00012957    162   0.11794 0.20540 0.011773
+155 0.00012900    163   0.11781 0.20537 0.011773
+156 0.00012883    164   0.11768 0.20539 0.011773
+157 0.00012787    165   0.11755 0.20550 0.011779
+158 0.00012580    166   0.11742 0.20552 0.011780
+159 0.00012580    167   0.11729 0.20550 0.011779
+160 0.00012482    168   0.11717 0.20549 0.011779
+161 0.00012281    169   0.11704 0.20549 0.011780
+162 0.00012079    170   0.11692 0.20545 0.011779
+163 0.00011927    171   0.11680 0.20531 0.011778
+164 0.00011591    172   0.11668 0.20524 0.011778
+165 0.00011584    173   0.11657 0.20531 0.011779
+166 0.00011547    174   0.11645 0.20539 0.011779
+167 0.00011463    175   0.11633 0.20550 0.011779
+168 0.00011445    176   0.11622 0.20544 0.011779
+169 0.00011334    177   0.11610 0.20548 0.011780
+170 0.00011249    178   0.11599 0.20558 0.011780
+171 0.00011099    179   0.11588 0.20570 0.011780
+172 0.00011071    180   0.11577 0.20556 0.011780
+173 0.00010924    181   0.11566 0.20556 0.011780
+174 0.00010706    182   0.11555 0.20561 0.011780
+175 0.00010699    183   0.11544 0.20548 0.011779
+176 0.00010653    184   0.11533 0.20543 0.011779
+177 0.00010418    186   0.11512 0.20526 0.011778
+178 0.00010348    187   0.11502 0.20517 0.011779
+179 0.00010308    188   0.11491 0.20507 0.011779
+180 0.00010190    189   0.11481 0.20511 0.011777
+181 0.00010021    190   0.11471 0.20502 0.011794
+182 0.00010000    191   0.11461 0.20496 0.011791</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># training set</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>predict_train <span class="ot">&lt;-</span> <span class="fu">predict</span>(regress_tr_large, train_df)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="fu">accuracy</span>(predict_train, train_df<span class="sc">$</span>price)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                    ME     RMSE      MAE       MPE     MAPE
+Test set -4.419297e-14 121158.5 74195.94 -3.623385 14.58341</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># validation set</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>predict_valid <span class="ot">&lt;-</span> <span class="fu">predict</span>(regress_tr_large, valid_df)</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a><span class="fu">accuracy</span>(predict_valid, valid_df<span class="sc">$</span>price)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>               ME   RMSE      MAE       MPE     MAPE
+Test set 678.0408 187146 88464.85 -4.612811 16.44547</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The RMSE of the training set is off by ~$120k on average, the validation set is off by ~$180k on average</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The mean error is very accurate to training data but increases about $680 from to validation, albeit the scale is much larger for housing prices. The MAPE of 16.5% indicates that the model has acceptable accuracy. All metrics tend to perform worse from validation to training data, but don’t show any drastic differences.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>var_importance <span class="ot">&lt;-</span> <span class="fu">varImp</span>(regress_tr_large)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="co"># plot variable importance, use as reference in feature selection </span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(var_importance)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>              Overall
+bathrooms    8.134629
+grade       12.116579
+sqft_living 21.722981
+sqft_lot    15.728184
+view         9.860564
+yr_built    12.652376
+zipcode     22.301949</code></pre>
+</div>
+</div>
+<p>Model 2: Linear Regression</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># new training validation split </span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">666</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>train_index_2 <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(data), <span class="fl">0.6</span> <span class="sc">*</span> <span class="fu">nrow</span>(data))</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>valid_index_2 <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(data), train_index)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>train_df_2 <span class="ot">&lt;-</span> data[train_index, ]</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>valid_df_2 <span class="ot">&lt;-</span> data[valid_index, ]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>house_model <span class="ot">&lt;-</span> <span class="fu">lm</span>(price <span class="sc">~</span> sqft_living <span class="sc">+</span> view <span class="sc">+</span> bedrooms <span class="sc">+</span> bathrooms <span class="sc">+</span> grade <span class="sc">+</span> lat <span class="sc">+</span> zipcode,</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>                      <span class="at">data =</span> train_df_2)</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(house_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+lm(formula = price ~ sqft_living + view + bedrooms + bathrooms + 
+    grade + lat + zipcode, data = train_df_2)
+
+Residuals:
+     Min       1Q   Median       3Q      Max 
+-1159312   -75329    -2100    62348  2926791 
+
+Coefficients:
+               Estimate Std. Error t value Pr(&gt;|t|)    
+(Intercept)  -6.179e+06  4.405e+06  -1.403 0.160756    
+sqft_living   1.809e+02  3.612e+00  50.097  &lt; 2e-16 ***
+view          8.413e+04  2.309e+03  36.437  &lt; 2e-16 ***
+bedrooms     -2.314e+04  2.368e+03  -9.774  &lt; 2e-16 ***
+bathrooms    -5.833e+03  3.461e+03  -1.685 0.091970 .  
+grade         6.234e+04  2.366e+03  26.351  &lt; 2e-16 ***
+lat           1.211e+05  9.313e+04   1.301 0.193362    
+zipcode98002  5.636e+04  2.109e+04   2.672 0.007549 ** 
+zipcode98003 -1.412e+04  1.851e+04  -0.763 0.445484    
+zipcode98004  7.725e+05  3.411e+04  22.647  &lt; 2e-16 ***
+zipcode98005  3.111e+05  3.587e+04   8.674  &lt; 2e-16 ***
+zipcode98006  2.564e+05  2.847e+04   9.003  &lt; 2e-16 ***
+zipcode98007  2.371e+05  3.652e+04   6.492 8.84e-11 ***
+zipcode98008  2.553e+05  3.419e+04   7.467 8.87e-14 ***
+zipcode98010  8.544e+04  2.833e+04   3.015 0.002572 ** 
+zipcode98011  8.398e+04  4.684e+04   1.793 0.073046 .  
+zipcode98014  9.104e+04  4.196e+04   2.169 0.030081 *  
+zipcode98019  5.286e+04  4.579e+04   1.154 0.248340    
+zipcode98022  2.844e+04  2.130e+04   1.335 0.181779    
+zipcode98023 -1.483e+04  1.623e+04  -0.914 0.360804    
+zipcode98024  1.580e+05  3.628e+04   4.354 1.35e-05 ***
+zipcode98027  1.518e+05  2.626e+04   5.781 7.66e-09 ***
+zipcode98028  7.111e+04  4.598e+04   1.546 0.122014    
+zipcode98029  1.725e+05  2.969e+04   5.809 6.45e-09 ***
+zipcode98030  9.208e+03  2.051e+04   0.449 0.653502    
+zipcode98031  2.142e+04  2.111e+04   1.015 0.310247    
+zipcode98032  4.918e+03  2.726e+04   0.180 0.856850    
+zipcode98033  3.463e+05  3.860e+04   8.972  &lt; 2e-16 ***
+zipcode98034  1.735e+05  4.174e+04   4.158 3.24e-05 ***
+zipcode98038  3.705e+04  1.658e+04   2.234 0.025483 *  
+zipcode98039  1.203e+06  4.864e+04  24.734  &lt; 2e-16 ***
+zipcode98040  5.424e+05  3.004e+04  18.056  &lt; 2e-16 ***
+zipcode98042  1.456e+04  1.676e+04   0.869 0.385041    
+zipcode98045  7.813e+04  2.570e+04   3.040 0.002374 ** 
+zipcode98052  1.975e+05  3.821e+04   5.169 2.40e-07 ***
+zipcode98053  1.649e+05  3.851e+04   4.281 1.88e-05 ***
+zipcode98055  4.418e+04  2.331e+04   1.896 0.058033 .  
+zipcode98056  9.296e+04  2.531e+04   3.673 0.000241 ***
+zipcode98058  3.125e+04  2.088e+04   1.497 0.134513    
+zipcode98059  8.421e+04  2.401e+04   3.507 0.000456 ***
+zipcode98065  6.834e+04  2.760e+04   2.476 0.013298 *  
+zipcode98070  1.285e+05  2.616e+04   4.911 9.21e-07 ***
+zipcode98072  1.284e+05  4.574e+04   2.807 0.005006 ** 
+zipcode98074  1.499e+05  3.386e+04   4.427 9.66e-06 ***
+zipcode98075  1.813e+05  3.142e+04   5.769 8.19e-09 ***
+zipcode98077  1.142e+05  4.645e+04   2.458 0.013973 *  
+zipcode98092 -1.986e+04  1.787e+04  -1.111 0.266603    
+zipcode98102  4.307e+05  4.163e+04  10.346  &lt; 2e-16 ***
+zipcode98103  3.044e+05  3.767e+04   8.080 7.17e-16 ***
+zipcode98105  5.179e+05  3.881e+04  13.345  &lt; 2e-16 ***
+zipcode98106  1.179e+05  2.793e+04   4.220 2.46e-05 ***
+zipcode98107  3.021e+05  3.891e+04   7.764 8.98e-15 ***
+zipcode98108  1.129e+05  3.111e+04   3.628 0.000287 ***
+zipcode98109  4.917e+05  3.959e+04  12.421  &lt; 2e-16 ***
+zipcode98112  6.324e+05  3.541e+04  17.859  &lt; 2e-16 ***
+zipcode98115  2.896e+05  3.859e+04   7.505 6.62e-14 ***
+zipcode98116  2.512e+05  3.057e+04   8.217 2.33e-16 ***
+zipcode98117  2.818e+05  3.880e+04   7.262 4.07e-13 ***
+zipcode98118  1.564e+05  2.759e+04   5.668 1.48e-08 ***
+zipcode98119  4.746e+05  3.862e+04  12.289  &lt; 2e-16 ***
+zipcode98122  3.077e+05  3.393e+04   9.069  &lt; 2e-16 ***
+zipcode98125  1.742e+05  4.183e+04   4.165 3.14e-05 ***
+zipcode98126  1.669e+05  2.818e+04   5.921 3.31e-09 ***
+zipcode98133  1.265e+05  4.338e+04   2.915 0.003563 ** 
+zipcode98136  2.281e+05  2.918e+04   7.818 5.88e-15 ***
+zipcode98144  2.852e+05  3.173e+04   8.987  &lt; 2e-16 ***
+zipcode98146  1.078e+05  2.623e+04   4.111 3.98e-05 ***
+zipcode98148  5.382e+04  3.599e+04   1.495 0.134867    
+zipcode98155  1.095e+05  4.487e+04   2.440 0.014718 *  
+zipcode98166  7.247e+04  2.379e+04   3.046 0.002326 ** 
+zipcode98168  6.462e+04  2.569e+04   2.515 0.011910 *  
+zipcode98177  1.764e+05  4.482e+04   3.937 8.32e-05 ***
+zipcode98178  3.702e+04  2.626e+04   1.410 0.158590    
+zipcode98188  3.209e+04  2.872e+04   1.117 0.263877    
+zipcode98198  1.681e+04  1.990e+04   0.845 0.398247    
+zipcode98199  3.403e+05  3.666e+04   9.281  &lt; 2e-16 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+Residual standard error: 166700 on 10461 degrees of freedom
+Multiple R-squared:  0.7845,    Adjusted R-squared:  0.783 
+F-statistic: 507.9 on 75 and 10461 DF,  p-value: &lt; 2.2e-16</code></pre>
+</div>
+</div>
+<ul>
+<li>Residual shows the model to fit the data well, as it’s somewhat spread around 0 considering the scale of home prices.</li>
+<li>Most variables used are statistically significant, showing 99% + confidence in prediction.</li>
+<li>The residual standard error (166,700) is much smaller than the difference betweenthe min and max of price in both the training (5,218,000) &amp; validation set (7,620,000), and also less than the standard deviation (357,900 &amp; 377,275) showing the model to be a good fit.</li>
+<li>The Adjusted R-squared shows that the model can predict 78.3% of the variance in price.</li>
+<li>The p-value shows the model is statistically significant.</li>
+</ul>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">max</span>(train_df_2<span class="sc">$</span>price) <span class="sc">-</span> <span class="fu">min</span>(train_df_2<span class="sc">$</span>price)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5218000</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sd</span>(train_df_2<span class="sc">$</span>price)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 357904.3</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">max</span>(valid_df_2<span class="sc">$</span>price) <span class="sc">-</span> <span class="fu">min</span>(valid_df_2<span class="sc">$</span>price)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 7620000</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sd</span>(valid_df_2<span class="sc">$</span>price)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 377275.9</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># get metrics used in regression tree model to use in evaluation and comparison </span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="co"># training set evaluation</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(Metrics)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'Metrics'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:caret':
+
+    precision, recall</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following object is masked from 'package:forecast':
+
+    accuracy</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>predict_train <span class="ot">&lt;-</span> <span class="fu">predict</span>(house_model, train_df)</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"Training Set Metrics:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Training Set Metrics:</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"ME:"</span>, <span class="fu">mean</span>(predict_train <span class="sc">-</span> train_df<span class="sc">$</span>price), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ME: -6.556363e-09 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"RMSE:"</span>, <span class="fu">rmse</span>(train_df<span class="sc">$</span>price, predict_train), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>RMSE: 166125.9 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"MAE:"</span>, <span class="fu">mae</span>(train_df<span class="sc">$</span>price, predict_train), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>MAE: 100866.7 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"MPE:"</span>, <span class="fu">mean</span>((predict_train <span class="sc">-</span> train_df<span class="sc">$</span>price) <span class="sc">/</span> train_df<span class="sc">$</span>price) <span class="sc">*</span> <span class="dv">100</span>, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>MPE: 1.568275 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"MAPE:"</span>, <span class="fu">mape</span>(train_df<span class="sc">$</span>price, predict_train), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>MAPE: 0.2031174 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># validation set evaluation</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>predict_valid <span class="ot">&lt;-</span> <span class="fu">predict</span>(house_model, valid_df)</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"</span><span class="sc">\n</span><span class="st">Validation Set Metrics:</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Validation Set Metrics:</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"ME:"</span>, <span class="fu">mean</span>(predict_valid <span class="sc">-</span> valid_df<span class="sc">$</span>price), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ME: 171.7883 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"RMSE:"</span>, <span class="fu">rmse</span>(valid_df<span class="sc">$</span>price, predict_valid), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>RMSE: 187277.6 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"MAE:"</span>, <span class="fu">mae</span>(valid_df<span class="sc">$</span>price, predict_valid), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>MAE: 102072.4 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"MPE:"</span>, <span class="fu">mean</span>((predict_valid <span class="sc">-</span> valid_df<span class="sc">$</span>price) <span class="sc">/</span> valid_df<span class="sc">$</span>price) <span class="sc">*</span> <span class="dv">100</span>, <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>MPE: 1.235508 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="st">"MAPE:"</span>, <span class="fu">mape</span>(valid_df<span class="sc">$</span>price, predict_valid), <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>MAPE: 0.2066745 </code></pre>
+</div>
+</div>
+<p>The mean error varies from training but still fares well at $171 considering the scale of housing prices. The Root Mean Square Error also doesn’t perform as well from training to validation, although MAE and MAPE perform similarly from training to validation and Mean Percentage Error improves.</p>
+<p>Our best model:</p>
+<p>Linear regression is our best model. In terms of mean error ($171 to $678) it performed better and showed strong results in predicting the actual price values. This was also reciprocated in mean percentage error as predictions were only about 1.2% above the actual values while the Regression Tree was underpredicting by 4.6%. We were also able to determine the model to predict 78.3% of the variance in price, indicating a strong linear relationship.</p>
+<p>How good is it?</p>
+<p>Our Linear Regression model does a good job predicting house prices. The mean error from prediction to actual price is ~$171 over, in the context of house prices this appears to predict well. One could also argue that it's better to skew towards overpredicting the price of houses rather than underpredicting considering the nature of the commodity becoming more expensive in the area over time. The model had an adjusted R-Squared of 0.783, indicating a strong linear relationship and explaining a significant proportion of the variability in the dependent variable. The p-value (2.2e-16) shows the model to be statistically significant and the residual also shows the model to fit the data well, as it’s somewhat spread around 0 considering the scale of home prices. The residual standard error also mirrors this as (166,700) is much smaller than the difference between the min and max of price in both the training (5,218,000) &amp; validation set (7,620,000), and less than the standard deviation (357,900 &amp; 377,275), overall showing the model to be a good fit.</p>
+<p>The RMSE and mean absolute error being larger in contrast to the mean error could indicate there are a few predictions that have large errors (outliers) penalizing the model. This can be seen in the following distribution.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a>predictions <span class="ot">&lt;-</span> <span class="fu">predict</span>(house_model, train_df_2)</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a scatter plot</span></span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(train_df_2<span class="sc">$</span>price, predictions, <span class="at">main =</span> <span class="st">"Scatter Plot of Predictions vs Actual Prices"</span>,</span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a>     <span class="at">xlab =</span> <span class="st">"Actual Prices"</span>, <span class="at">ylab =</span> <span class="st">"Predicted Prices"</span>, <span class="at">pch =</span> <span class="dv">16</span>, <span class="at">col =</span> <span class="st">"blue"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Project2_files/figure-html/unnamed-chunk-15-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<p>Overall, if the context of outliers is taken into account the model can still expect to do a good job of properly predicting house prices in King County, as the various metrics show.</p>
+<p>Prediction for new houses:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb71"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a>test <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"house_test_23.csv"</span>, <span class="at">header =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb71-3"><a href="#cb71-3" aria-hidden="true" tabindex="-1"></a><span class="co"># set zip variable as factor on test data</span></span>
+<span id="cb71-4"><a href="#cb71-4" aria-hidden="true" tabindex="-1"></a>test<span class="sc">$</span>zipcode <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(test<span class="sc">$</span>zipcode)</span>
+<span id="cb71-5"><a href="#cb71-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb71-6"><a href="#cb71-6" aria-hidden="true" tabindex="-1"></a><span class="co"># predict new houses</span></span>
+<span id="cb71-7"><a href="#cb71-7" aria-hidden="true" tabindex="-1"></a>house_model_predict <span class="ot">&lt;-</span> <span class="fu">predict</span>(house_model, <span class="at">newdata =</span> test)</span>
+<span id="cb71-8"><a href="#cb71-8" aria-hidden="true" tabindex="-1"></a>house_model_predict</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>        1         2         3         4         5         6         7         8 
+591905.20 367194.35 403375.63 162299.75 -20917.31 398817.07 598713.47  95011.91 
+        9        10        11        12        13        14        15        16 
+393973.05 292191.10 273611.20 728085.51 302137.54  77827.22 756826.07 475075.36 
+       17        18        19        20 
+168603.66 735037.27 870294.60 547780.32 </code></pre>
+</div>
+</div>
+<p>Thank you for a great quarter professor!</p>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
