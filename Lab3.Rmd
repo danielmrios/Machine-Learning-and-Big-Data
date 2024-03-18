@@ -1,0 +1,144 @@
+---
+title: "Lab_Regression"
+output: html_document
+date: "2023-11-13"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+1 --------------------
+Load Data
+```{r}
+airfares <- read.csv("Airfares.csv", header = TRUE)
+head(airfares, 10)
+# Remove unnecessary variables
+# Since S_Code, S_CITY, E_CODE, and E_CITY are likely to determine
+# DISTANCE, and these 4 categorical variables have too many values,
+# resulting in too many dummy variables,
+# they are dropped from the regression model.
+# Incidentally, they are also not included in the new record.
+
+airfares <- airfares[, -c(1:4)]
+names(airfares)
+```
+
+2 --------------------
+Training-Validation split and correlations
+```{r}
+set.seed(666)
+
+train_index <- sample(1:nrow(airfares), 0.6 * nrow(airfares))
+valid_index <- setdiff(1:nrow(airfares), train_index)
+
+train_df_st <- airfares[train_index, ]
+valid_df_st <- airfares[valid_index, ]
+
+nrow(train_df_st)
+nrow(valid_df_st)
+```
+
+Correlation matrix 
+```{r}
+cor(train_df_st[sapply(train_df_st,is.numeric)]) 
+```
+Distance seems to be the best predictor of FARE, at 0.68 
+
+
+3 --------------------
+Create a model based on the best predictor & evaluate the accuracy
+```{r}
+Fare_Model <- lm(FARE ~ DISTANCE + COUPON + NEW + HI + S_INCOME + E_INCOME + S_POP + E_POP + PAX,
+                      data = train_df_st)
+summary(Fare_Model)
+```
+- Residual shows the model to fit the data well, as it's somewhat spread around 0
+
+- The intercept and most variables are statistically significant, showing 99% + 
+confidence in prediction 
+
+- The residual standard error (42.3) is much smaller than the difference between
+the min and max of FARE in both the training & validation set (~340), and also
+less than the standard deviation (~75) showing the model to be a good fit
+
+- The Adjusted R-squared shows that the model can predict 68.4% of the variance
+in FARE
+
+- The F-statistic shows the model is statistically significant
+
+
+Evaluate accuracy of model on training & validation sets:
+
+```{r}
+library(forecast)
+
+# training set
+Fare_Model_pred_train <- predict(Fare_Model,
+                                train_df_st)
+
+accuracy(Fare_Model_pred_train, train_df_st$FARE)
+
+# validation set
+Fare_Model_pred_valid <- predict(Fare_Model,
+                                valid_df_st)
+
+accuracy(Fare_Model_pred_valid, valid_df_st$FARE)
+```
+- The RMSE doesnt vary much from training to validation (41.8 to 42.6)
+
+- There is an average percentage difference of 25.3% between predicted and 
+actual values on the validation set, consistent with the 26% difference on training
+
+```{r}
+max(train_df_st$FARE) - min(train_df_st$FARE)
+
+sd(train_df_st$FARE)
+
+max(valid_df_st$FARE) - min(valid_df_st$FARE)
+
+sd(valid_df_st$FARE)
+```
+The variability and range of values are slightly higher in training to 
+validation, but overall similar 
+
+4 --------------------
+Now we'll create a new record to represent a new route
+```{r}
+new_record <- data.frame(COUPON = 1.202, NEW = 3, 
+                         VACATION = "Yes", SW = "Yes", 
+                         HI = 4442.141, S_INCOME = 28760, 
+                         E_INCOME = 27664, S_POP = 4557004, 
+                         E_POP = 3195503, SLOT = "Free", 
+                         GATE = "Free", PAX = 12782, 
+                         DISTANCE = 1976)
+```
+
+And predict the fare 
+```{r}
+predicted_fare <- predict(Fare_Model, newdata = new_record)
+
+# Display the predicted fare
+cat("Predicted FARE:", predicted_fare, "\n")
+```
+The predicted Fare for the new record is $234.09
+
+5 ---------------------
+The variables likely to actually be available in real world implementation 
+of such a model would be variables that don't change: Distance, SW, VACATION, HI, Origin and Destination Income & Population. It's possible that other variables have difficulty in obtaining such data. 
+
+6 ---------------------
+
+6a. A technique I would use to predict whether a route's fare is high or low is
+logistic regression. 
+
+b. We would likely need to encode categorical variables into numerical variables,
+as well as potentially transform variables for a combined effect.
+
+c. Logistic regression serves a good technique for predicting binary outcomes
+such as Low/High. It can also give us coefficients that indicate how each factor 
+influences the likelihood of a route having high or low fare.
+
+d. To evaluate the quality of this new model we would look at a confusion matrix
+to see how the validation performs on predicting high/low values as well as an
+ROC curve to assess it's ability to distinguish true positives.

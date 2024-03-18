@@ -1,0 +1,283 @@
+---
+title: "kNN Lab"
+output:
+  html_document:
+    df_print: paged
+date: "2023-10-17"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Load libraries and data
+```{r}
+# caret library
+library(caret)
+
+# load bank data
+bank <- read.csv("UniversalBank.csv")
+names(bank)
+head(bank,10)
+str(bank)
+```
+Clean up 
+```{r}
+# drop ID and zip code columns
+bank <- bank[ , -c(1, 5)]
+names(bank)
+
+# reorder variables. Put the response last
+bank <- bank[ , c(1:7, 9:12, 8)]
+
+head(bank)
+```
+
+```{r}
+# set categorical variables as factor
+bank$Education <- as.factor(bank$Education)
+bank$Securities.Account <- as.factor(bank$Securities.Account)
+bank$CD.Account <- as.factor(bank$CD.Account) 
+bank$Online <- as.factor(bank$Online) 
+bank$CreditCard <- as.factor(bank$CreditCard) 
+
+# rename outcome variable values
+bank$Personal.Loan <- factor(bank$Personal.Loan,
+                              levels = c("0", "1"),
+                              labels = c("No", "Yes"))
+
+table(bank$Personal.Loan)
+```
+
+Set training and validation sets 
+```{r}
+set.seed(666)
+
+train_index <- sample(1:nrow(bank), 0.6 * nrow(bank))
+valid_index <- setdiff(1:nrow(bank), train_index)
+
+train <- bank[train_index, ]
+valid <- bank[valid_index, ]
+
+nrow(train)
+nrow(valid)
+```
+
+Define new customer 
+```{r}
+new_cust <- data.frame(Age = 40,
+                       Experience = 10,
+                       Income = 84,
+                       Family = 2,
+                       CCAvg = 2,
+                       Education = 2,
+                       Mortgage = 0,
+                       Securities.Account = 0,
+                       CD.Account = 0,
+                       Online = 1,
+                       CreditCard = 1)
+
+# set categorical variables as factor
+
+new_cust$Education <- as.factor(new_cust$Education)
+new_cust$Securities.Account <- as.factor(new_cust$Securities.Account)
+new_cust$CD.Account <- as.factor(new_cust$CD.Account) 
+new_cust$Online <- as.factor(new_cust$Online) 
+new_cust$CreditCard <- as.factor(new_cust$CreditCard) 
+
+new_cust
+```
+
+Prepare for kNN
+```{r}
+# normalisation for numerical variables
+
+norm_values <- preProcess(train[, -c(6, 8:12)],
+                          method = c("center", "scale"))
+
+```
+```{r}
+train_norm <- train 
+valid_norm <- valid
+```
+
+```{r}
+# normalize the training set
+
+train_norm[, -c(6, 8:12)] <- predict(norm_values,
+                                train[, -c(6, 8:12)])
+head(train_norm)
+```
+
+```{r}
+# normalize the validation set 
+
+valid_norm[, -c(6, 8:12)] <- predict(norm_values,
+                                     valid[, -c(6, 8:12)])
+
+head(valid_norm)
+```
+
+```{r}
+# predict normalized values for new customer 
+
+new_cust_norm <- predict(norm_values, new_cust)
+new_cust_norm
+```
+
+Predict training set across k values 
+```{r}
+# Train k = 3
+knn_model_k3 <- caret::knn3(Personal.Loan ~ ., 
+                            data = train_norm, k = 3)
+knn_model_k3
+```
+```{r}
+# Predict training set using k = 3
+
+knn_pred_k3_train <- predict(knn_model_k3, 
+                             newdata = train_norm[, -c(12)], 
+                             type = "class")
+head(knn_pred_k3_train)
+```
+```{r}
+# evaluate k = 3
+confusionMatrix(knn_pred_k3_train, as.factor(train_norm[, 12]),
+                positive = "Yes")
+```
+k = 5
+```{r}
+# train k = 5
+
+knn_model_k5 <- caret::knn3(Personal.Loan ~ ., 
+                            data = train_norm, k = 5)
+knn_model_k5
+```
+```{r}
+# predict training set using k = 5
+
+knn_pred_k5_train <- predict(knn_model_k5, 
+                             newdata = train_norm[, -c(12)], 
+                             type = "class")
+
+head(knn_pred_k5_train)
+```
+
+```{r}
+# evaluate k = 5
+confusionMatrix(knn_pred_k5_train, as.factor(train_norm[, 12]),
+                positive = "Yes")
+```
+k = 7
+```{r}
+# train k = 7
+knn_model_k7 <- caret::knn3(Personal.Loan ~ ., 
+                            data = train_norm, k = 7)
+knn_model_k7
+```
+```{r}
+# predict training set using k = 7
+
+knn_pred_k7_train <- predict(knn_model_k7, 
+                             newdata = train_norm[, -c(12)], 
+                             type = "class")
+head(knn_pred_k7_train)
+```
+
+```{r}
+# evaluate k = 7
+confusionMatrix(knn_pred_k7_train, as.factor(train_norm[, 12]),
+                positive = "Yes")
+```
+Predict the validation set across values of k 
+
+k = 3 validation 
+```{r}
+# predict training set for k = 3
+knn_pred_k3_valid <- predict(knn_model_k3, 
+                             newdata = valid_norm[, -c(12)], 
+                             type = "class")
+head(knn_pred_k3_valid)
+```
+
+```{r}
+# evaluation of k = 3
+confusionMatrix(knn_pred_k3_valid, as.factor(valid_norm[, 12]),
+                positive = "Yes")
+```
+
+```{r}
+# load ROSE library
+library(ROSE)
+
+# ROC curve for k = 3
+ROSE::roc.curve(valid_norm$Personal.Loan, 
+                knn_pred_k3_valid)
+```
+
+k = 5 validation 
+```{r}
+# predict training set for k = 5
+knn_pred_k5_valid <- predict(knn_model_k5, 
+                             newdata = valid_norm[, -c(12)], 
+                             type = "class")
+head(knn_pred_k5_valid)
+```
+
+
+```{r}
+# evaluation of k = 5
+confusionMatrix(knn_pred_k5_valid, as.factor(valid_norm[, 12]),
+                positive = "Yes")
+```
+
+```{r}
+# ROC curve for k = 5
+ROSE::roc.curve(valid_norm$Personal.Loan, 
+                knn_pred_k5_valid)
+```
+
+k = 7 validation 
+```{r}
+# predict training set for k = 7
+knn_pred_k7_valid <- predict(knn_model_k7, 
+                             newdata = valid_norm[, -c(12)], 
+                             type = "class")
+head(knn_pred_k7_valid)
+```
+
+```{r}
+# evaluation of k = 7
+confusionMatrix(knn_pred_k7_valid, as.factor(valid_norm[, 12]),
+                positive = "Yes")
+```
+
+```{r}
+# ROC curve for k = 7 
+ROSE::roc.curve(valid_norm$Personal.Loan, 
+                knn_pred_k7_valid)
+```
+k = 3 is the best choice for k, it was the most accurate on the training (97.5%) AND the validation set (96.15%).
+
+The AUC of 78.7 proves it to also be the best model, and a good one. 
+
+So we'll use it to predict the new customer:
+
+```{r}
+# predict outcome
+new_cust_k3_pred <- predict(knn_model_k3, 
+                                newdata = new_cust_norm,
+                                type = "class")
+new_cust_k3_pred
+```
+
+
+```{r}
+# predict probability, this shows that all 3 of the nearest neighbors were 'No' 
+new_cust_prob_k3 <- predict(knn_model_k3, 
+                                newdata = new_cust_norm,
+                                type = "prob")
+new_cust_prob_k3
+```
+
+The new customer is predicted to not accept a loan offer.

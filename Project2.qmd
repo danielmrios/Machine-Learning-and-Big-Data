@@ -1,0 +1,222 @@
+---
+title: "Project 2"
+format: html
+editor: visual
+---
+
+## Project 2
+
+A new real estate business wants to better understand the King County real estate market. We are going to explore the data and build a suitable model that predicts home prices to help them determine what factors determine home prices in King County.
+
+The data includes sale prices in King County between May 2014 and May 2015 and contains information on the time of sale, features & specs of house, location, and other grading scales.
+
+General Preparation & Exploration
+
+```{r}
+# load libraries 
+library(rpart)
+library(rpart.plot)
+library(forecast)
+library(caret)
+```
+
+```{r}
+# read house price csv 
+data <- read.csv("house_23.csv", header = TRUE)
+
+# investigate variables
+str(data)
+```
+
+```{r}
+# data transformations 
+
+# set waterfront variable as factor 
+data$waterfront <- as.factor(data$waterfront)
+
+# set month variable as factor 
+data$Month <- as.factor(data$Month)
+
+# set day variable as factor 
+data$Day <- as.factor(data$Day)
+
+# set day of week variable as factor 
+data$day_of_week <- as.factor(data$day_of_week)
+
+# set zip variable as factor 
+data$zipcode <- as.factor(data$zipcode)
+```
+
+```{r}
+# training validation split 
+set.seed(666)
+
+train_index <- sample(1:nrow(data), 0.7 * nrow(data))
+valid_index <- setdiff(1:nrow(data), train_index)
+
+train_df <- data[train_index, ]
+valid_df <- data[valid_index, ]
+```
+
+```{r}
+# feature selection 
+
+# correlation table 
+cor(data[sapply(data,is.numeric)]) 
+
+# correlation matrix
+library(corrgram)
+library(forecast)
+cor(train_df[sapply(train_df,is.numeric)])
+#pairs(price ~ ., data = train_df[,c(2:23)], pch = ".")
+corrgram(train_df[,c(2:23)])
+```
+
+```{r}
+# Variables used
+
+# grade - higher the better and likely a good predictor of price. 
+# view - houses with a waterfront view likely to be higher in price. 
+# bathrooms - price likely to increase as number gets larger.
+# bedrooms - price likely to increase as number gets larger. 
+# sqft_living - value likely to increase as house gets bigger.
+# yr_built - newer houses are likely to be more expensive.
+# sqft_lot - value likely to increase as lot gets bigger. 
+# zipcode - certain areas are more/less expensive than others.
+# lat - areas in northern king county could be more expensive.
+```
+
+Model 1: Regression Tree
+
+```{r}
+# Increase complexity parameter (cp) to create a larger and more complex tree
+regress_tr_large <- rpart(price ~ grade + view + bathrooms + sqft_living + yr_built + sqft_lot + zipcode,
+                          data = train_df, method = "anova", cp = 0.0001)
+
+# Visualize the larger tree
+rpart.plot(regress_tr_large, type = 4)
+```
+
+```{r}
+# the dataset seems to be more optimal for a more complex model, as the optimal complexity paramter in relation to cross-validation error is close to 0.0001
+plotcp(regress_tr_large)
+printcp(regress_tr_large)
+```
+
+```{r}
+# training set
+predict_train <- predict(regress_tr_large, train_df)
+accuracy(predict_train, train_df$price)
+
+
+# validation set
+predict_valid <- predict(regress_tr_large, valid_df)
+accuracy(predict_valid, valid_df$price)
+
+
+# The RMSE of the training set is off by ~$120k on average, the validation set is off by ~$180k on average
+```
+
+The mean error is very accurate to training data but increases about \$680 from to validation, albeit the scale is much larger for housing prices. The MAPE of 16.5% indicates that the model has acceptable accuracy. All metrics tend to perform worse from validation to training data, but don't show any drastic differences.
+
+```{r}
+var_importance <- varImp(regress_tr_large)
+
+# plot variable importance, use as reference in feature selection 
+print(var_importance)
+```
+
+Model 2: Linear Regression
+
+```{r}
+# new training validation split 
+set.seed(666)
+
+train_index_2 <- sample(1:nrow(data), 0.6 * nrow(data))
+valid_index_2 <- setdiff(1:nrow(data), train_index)
+
+train_df_2 <- data[train_index, ]
+valid_df_2 <- data[valid_index, ]
+```
+
+```{r}
+house_model <- lm(price ~ sqft_living + view + bedrooms + bathrooms + grade + lat + zipcode,
+                      data = train_df_2)
+summary(house_model)
+```
+
+-   Residual shows the model to fit the data well, as it's somewhat spread around 0 considering the scale of home prices.
+-   Most variables used are statistically significant, showing 99% + confidence in prediction.
+-   The residual standard error (166,700) is much smaller than the difference betweenthe min and max of price in both the training (5,218,000) & validation set (7,620,000), and also less than the standard deviation (357,900 & 377,275) showing the model to be a good fit.
+-   The Adjusted R-squared shows that the model can predict 78.3% of the variance in price.
+-   The p-value shows the model is statistically significant.
+
+```{r}
+max(train_df_2$price) - min(train_df_2$price)
+
+sd(train_df_2$price)
+
+max(valid_df_2$price) - min(valid_df_2$price)
+
+sd(valid_df_2$price)
+```
+
+```{r}
+# get metrics used in regression tree model to use in evaluation and comparison 
+
+# training set evaluation
+library(Metrics)
+predict_train <- predict(house_model, train_df)
+cat("Training Set Metrics:\n")
+cat("ME:", mean(predict_train - train_df$price), "\n")
+cat("RMSE:", rmse(train_df$price, predict_train), "\n")
+cat("MAE:", mae(train_df$price, predict_train), "\n")
+cat("MPE:", mean((predict_train - train_df$price) / train_df$price) * 100, "\n")
+cat("MAPE:", mape(train_df$price, predict_train), "\n")
+
+# validation set evaluation
+predict_valid <- predict(house_model, valid_df)
+cat("\nValidation Set Metrics:\n")
+cat("ME:", mean(predict_valid - valid_df$price), "\n")
+cat("RMSE:", rmse(valid_df$price, predict_valid), "\n")
+cat("MAE:", mae(valid_df$price, predict_valid), "\n")
+cat("MPE:", mean((predict_valid - valid_df$price) / valid_df$price) * 100, "\n")
+cat("MAPE:", mape(valid_df$price, predict_valid), "\n")
+```
+
+The mean error varies from training but still fares well at \$171 considering the scale of housing prices. The Root Mean Square Error also doesn't perform as well from training to validation, although MAE and MAPE perform similarly from training to validation and Mean Percentage Error improves.
+
+Our best model:
+
+Linear regression is our best model. In terms of mean error (\$171 to \$678) it performed better and showed strong results in predicting the actual price values. This was also reciprocated in mean percentage error as predictions were only about 1.2% above the actual values while the Regression Tree was underpredicting by 4.6%. We were also able to determine the model to predict 78.3% of the variance in price, indicating a strong linear relationship.
+
+How good is it?
+
+Our Linear Regression model does a good job predicting house prices. The mean error from prediction to actual price is \~\$171 over, in the context of house prices this appears to predict well. One could also argue that it\'s better to skew towards overpredicting the price of houses rather than underpredicting considering the nature of the commodity becoming more expensive in the area over time. The model had an adjusted R-Squared of 0.783, indicating a strong linear relationship and explaining a significant proportion of the variability in the dependent variable. The p-value (2.2e-16) shows the model to be statistically significant and the residual also shows the model to fit the data well, as it's somewhat spread around 0 considering the scale of home prices. The residual standard error also mirrors this as (166,700) is much smaller than the difference between the min and max of price in both the training (5,218,000) & validation set (7,620,000), and less than the standard deviation (357,900 & 377,275), overall showing the model to be a good fit.
+
+The RMSE and mean absolute error being larger in contrast to the mean error could indicate there are a few predictions that have large errors (outliers) penalizing the model. This can be seen in the following distribution.
+
+```{r}
+predictions <- predict(house_model, train_df_2)
+
+# Create a scatter plot
+plot(train_df_2$price, predictions, main = "Scatter Plot of Predictions vs Actual Prices",
+     xlab = "Actual Prices", ylab = "Predicted Prices", pch = 16, col = "blue")
+```
+
+Overall, if the context of outliers is taken into account the model can still expect to do a good job of properly predicting house prices in King County, as the various metrics show.
+
+Prediction for new houses:
+
+```{r}
+test <- read.csv("house_test_23.csv", header = TRUE)
+
+# set zip variable as factor on test data
+test$zipcode <- as.factor(test$zipcode)
+
+# predict new houses
+house_model_predict <- predict(house_model, newdata = test)
+house_model_predict
+```
+
+Thank you for a great quarter professor!

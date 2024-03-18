@@ -1,0 +1,80 @@
+---
+title: "Clustering Lab"
+output: html_document
+date: "2023-11-28"
+---
+
+1 -- Load Data
+```{r}
+univ <- read.csv("Universities.csv", header = TRUE)
+
+# summary of univ
+summary(univ)
+```
+
+2 -- Remove Records with missing data 
+```{r}
+univ_complete <- na.omit(univ)
+```
+
+3 -- Hirearchial clustering using normalized data, complete linkage and Manhattan distance
+
+3.1 ----- Remove categorical variables and ID
+```{r}
+univ_cont <- univ_complete[, -c(1:3)]
+```
+
+3.2 ----- Normalize data 
+```{r}
+univ_cont_norm <- sapply(univ_cont, scale)
+
+```
+
+3.3 ----- Compute distance matrix
+```{r}
+distance_matrix <- dist(univ_cont_norm, method = "manhattan")
+head(distance_matrix)
+```
+
+3.4 ----- Create hirearchial clusters
+```{r}
+hierarchical_cluster <- hclust(distance_matrix, method = "complete")
+
+# plot dendrogram
+plot(hierarchical_cluster, hang = "-200", ann = TRUE)
+```
+Check cluster quality
+```{r}
+library(factoextra)
+
+fviz_nbclust(univ_cont_norm, 
+             hcut, method = "silhouette") +
+  labs(subtitle = "Silhouette method")
+```
+3.5 ------ Compute cluster membership, use k = 2
+```{r}
+univ_hc_m_memb <- cutree(hierarchical_cluster, k = 2)
+head(univ_hc_m_memb)
+```
+
+3.6 ------- Create cluster dataframe
+```{r}
+univ_hc_m_memb_df <- as.data.frame(univ_hc_m_memb)
+```
+
+Rename cluster
+```{r}
+names(univ_hc_m_memb_df)[1] <- "Cluster"
+```
+
+3.7 ------ Merge cluster memberships with original data
+```{r}
+univ_w_cluster <- cbind(univ_cont, 
+                                     univ_hc_m_memb_df)
+
+head(univ_w_cluster) 
+```
+
+
+
+

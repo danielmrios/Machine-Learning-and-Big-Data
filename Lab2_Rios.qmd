@@ -1,0 +1,231 @@
+---
+title: "Decision Tree Lab"
+format: html
+editor: visual
+---
+
+```{r}
+# 1. Set up ---------------------------------------------------------------
+
+
+# 1.1 Libraries ------------------------------------------------------------
+
+library(rpart)
+library(rpart.plot)
+library(forecast)
+library(caret)
+
+```
+
+```{r}
+# 1.2 Load data ------------------------------------------------------------
+
+toyota <- read.csv("ToyotaCorolla.csv", header = TRUE)
+```
+
+```{r}
+# 1.3 Training validation split -------------------------------------------------------
+
+# convert fuel type to factor
+toyota$Fuel_Type <- as.factor(toyota$Fuel_Type)
+
+
+set.seed(666)
+
+train_index <- sample(1:nrow(toyota), 0.6 * nrow(toyota))
+valid_index <- setdiff(1:nrow(toyota), train_index)
+
+train_df <- toyota[train_index, ]
+valid_df <- toyota[valid_index, ]
+```
+
+```{r}
+
+nrow(train_df)
+nrow(valid_df)
+
+head(train_df)
+head(valid_df)
+
+str(train_df)
+str(valid_df)
+
+names(train_df)
+```
+
+```{r}
+# 2 and 3. Regression tree ------------------------------------------------------
+
+# 2.1 Build the regression tree
+regress_tr <- rpart(Price ~ Age_08_04 + KM + Fuel_Type + HP + Automatic + Doors + Quarterly_Tax + Mfr_Guarantee + Guarantee_Period + Airco + Automatic_airco + CD_Player + Powered_Windows + Sport_Model + Tow_Bar[],
+                    data = train_df, method = "anova", maxdepth = 3) #set maxdepth at 3
+
+# plot the tree 
+rpart.plot(regress_tr, type = 4)
+```
+
+```{r}
+# 2.2 Predict the training and validation sets ----------------------------------------------------------
+
+# training set
+predict_train <- predict(regress_tr, train_df)
+accuracy(predict_train, train_df$Price)
+
+
+# validation set
+predict_valid <- predict(regress_tr, valid_df)
+accuracy(predict_valid, valid_df$Price)
+
+
+# Compare the RMSE:
+# The RMSE of the training set is off by ~$1,350 on average, the validation set is off by ~$1,500 on average
+```
+
+```{r}
+
+# 3. Predict new record using regression tree ----------------------------
+
+# create df of new record
+# manually add the variables
+
+new_record <- data.frame(Age_08_04 = 77, 
+                         KM = 117000, 
+                         Fuel_Type = "Petrol", 
+                         HP = 110, 
+                         Automatic = 0, 
+                         Doors = 5, 
+                         Quarterly_Tax = 100, 
+                         Mfr_Guarantee = 0, 
+                         Guarantee_Period = 3, 
+                         Airco = 1, 
+                         Automatic_airco = 0, 
+                         CD_Player = 0, 
+                         Powered_Windows = 0, 
+                         Sport_Model = 0, 
+                         Tow_Bar = 1)
+
+# predict the price of the new record
+
+regress_tr_pred <- predict(regress_tr, newdata = new_record)
+regress_tr_pred
+```
+
+```{r}
+
+# 4. Classification tree --------------------------------------------------
+
+
+# 4.1 Binning -------------------------------------------------------------
+
+
+toyota$cat_price <- ifelse(toyota$Price <= mean(toyota$Price, na.rm = TRUE), "0", "1")
+table(toyota$cat_price)
+
+toyota$cat_price <- as.factor(toyota$cat_price)
+
+# Remove the numerical Price variable to avoid 
+toyota_cat <- toyota[,- c(3)]
+names(toyota_cat)
+```
+
+```{r}
+# 4.2 Training validation split -------------------------------------------
+
+set.seed(666)
+
+
+train_cat_index <- sample(1:nrow(toyota_cat), 0.6 * nrow(toyota_cat))
+valid_cat_index <- setdiff(1:nrow(toyota_cat), train_cat_index)
+
+train_cat_df <- toyota_cat[train_cat_index, ]
+valid_cat_df <- toyota_cat[valid_cat_index, ]
+
+# check
+
+nrow(train_cat_df)
+nrow(valid_cat_df)
+
+head(train_cat_df)
+head(valid_cat_df)
+```
+
+```{r}
+# 4.3 Classification tree -------------------------------------------------
+
+class_tr <- rpart(cat_price ~ Age_08_04 + KM + Fuel_Type + HP + Automatic + 
+                    Doors + Quarterly_Tax + Mfr_Guarantee + Guarantee_Period
+                  + Airco + Automatic_airco + CD_Player + Powered_Windows + 
+                    Sport_Model + Tow_Bar,
+                  data = train_cat_df, method = "class",
+                  maxdepth = 3) # set maxdepth = 3
+
+# plot the tree
+prp(class_tr, cex = 0.8, tweak = 1) 
+```
+
+```{r}
+# what is/are the top predictors?
+# The top predictor is the variable Age_08_0, splitting at >= 57 
+
+# training set confusion matrix 
+class_tr_train_predict <- predict(class_tr, train_cat_df,
+                                  type = "class")
+
+t(t(head(class_tr_train_predict,10)))
+```
+
+```{r}
+# validation confusion matrix
+
+confusionMatrix(class_tr_train_predict, train_cat_df[, 39], positive = "1")
+```
+
+```{r}
+# validation set
+
+class_tr_valid_predict <- predict(class_tr, valid_df,
+                                  type = "class")
+
+t(t(head(class_tr_valid_predict,10)))
+
+# the probabilities
+```
+
+```{r}
+confusionMatrix(class_tr_valid_predict, valid_cat_df[, 39], positive = "1")
+```
+
+```{r}
+# probabilities 
+
+class_tr_valid_predict_prob <- predict(class_tr, valid_df,
+                                  type = "prob")
+
+head(class_tr_valid_predict_prob)
+
+# The accuracy of the training set (90%) are similar to that of the validation set (89%)
+```
+
+```{r}
+mean(toyota$Price)
+```
+
+```{r}
+# 4.4 Predict new record --------------------------------------------------
+
+class_tr_pred <- predict(class_tr, newdata = new_record)
+class_tr_pred
+
+```
+
+```{r}
+
+# 5. Comparing the trees --------------------------------------------------
+
+
+# The predictors between the regression tree and the classification tree are similar, both placing a heavy emphasis on the Age_08_01 variable in nodes
+
+# The predictions show to be somewhat similar based on what were able to know. We know that the mean price is 10,730 and the 95% prediction 0 indicates the new record is below this value. Considering the estimated price of 7,970 in the regression tree this indicates that the predictions are similar.
+
+# If I was running a business and wanted to predict the price of cars I would use the regression tree as it answers the question better of what the specific price is, as opposed to higher or lower than the mean value which could be useful but considering the size of the buckets doesnt lead to a very specific prediction. 
+```
