@@ -1,0 +1,347 @@
+---
+title: "Project 1 Decision"
+format: html
+editor: visual
+---
+
+```{r}
+#Load all of the libraries
+library(tidyr)
+library(rpart)
+library(rpart.plot)
+library(forecast)
+library(caret)
+library(ROSE)
+library(randomForest)
+```
+
+kNN Model
+
+```{r}
+# Load data 
+data <- read.csv("credit_fa2023_23.csv", header = TRUE)
+
+# Add new fields into data frame to improve model accuracy
+
+for (i in 1:nrow(data)) {
+  data$Income_Credit_Ratio[i] <- data$AMT_INCOME_TOTAL[i] / data$AMT_CREDIT[i]
+}
+
+for (i in 1:nrow(data)) {
+  data$Annuity_Income_Ratio[i] <- data$AMT_ANNUITY[i] / data$AMT_INCOME_TOTAL[i]
+}
+
+for (i in 1:nrow(data)) {
+  data$Credit_As_Percentage[i] <- data$AMT_CREDIT[i] / data$AMT_INCOME_TOTAL[i]
+}
+
+for (i in 1:nrow(data)) {
+  data$Percent_Days_Employed[i] <- data$DAYS_EMPLOYED[i] / data$DAYS_BIRTH[i]
+}
+
+for (i in 1:nrow(data)) {
+  data$Income_Per_Person[i] <- data$AMT_INCOME_TOTAL[i] / data$CNT_FAM_MEMBERS[i]
+}
+
+# Remove XNA from CODE_GENDER variable and convert to factor
+data1 <- data1[data1$CODE_GENDER != "XNA", ]
+
+data$CODE_GENDER <- factor(data$CODE_GENDER)
+
+# Explore data
+names(data)
+str(data)
+summary(data$TARGET)
+```
+
+```{r}
+# Convert education type to factor with levels across education 
+data$NAME_EDUCATION_TYPE <- factor(data$NAME_EDUCATION_TYPE, levels = c(
+  "Secondary / secondary special",
+  "Higher education",
+  "Lower secondary",
+  "Incomplete higher",
+  "Academic degree"))
+
+# Set Target variable as factor 
+data$TARGET <- as.factor(data$TARGET)
+```
+
+```{r}
+# Variable list 
+# Percent_Days_Employed, NAME_EDUCATION_TYPE, REGION_RATING_CLIENT_W_CITY, AMT_GOODS_PRICE, CODE_GENDER, DAYS_BIRTH, AMT_CREDIT, AMT_ANNUITY, DAYS_EMPLOYED, DAYS_REGISTRATION, DAYS_ID_PUBLISH, Annuity_Income_Ratio
+```
+
+```{r}
+# Remove unused variables
+data <- data[ , -c(1:2, 4, 6:9, 13:14, 16:17, 22:31, 33:69, 71, 73)]
+names(data)
+```
+
+```{r}
+# Training - Validation split 
+set.seed(666)
+train_index <- sample(1:nrow(data), 0.7 * nrow(data))
+valid_index <- setdiff(1:nrow(data), train_index)
+train_df <- data[train_index, ]
+valid_df <- data[valid_index, ]
+
+# Double check 
+nrow(train_df)
+nrow(valid_df)
+head(train_df)
+head(valid_df)
+str(train_df)
+str(valid_df)
+```
+
+```{r}
+# Use ROSE to to balance model
+train_df_rose <- ROSE(TARGET ~ Percent_Days_Employed + NAME_EDUCATION_TYPE + REGION_RATING_CLIENT_W_CITY + AMT_GOODS_PRICE + CODE_GENDER + DAYS_BIRTH + AMT_CREDIT + AMT_ANNUITY + DAYS_EMPLOYED + DAYS_REGISTRATION + DAYS_ID_PUBLISH + Annuity_Income_Ratio,
+                      data = train_df, seed = 666)$data
+
+table(train_df_rose$TARGET)
+```
+
+```{r}
+# Check variables
+names(data)
+```
+
+```{r}
+# Normalization algorithm
+train_norm <- train_df_rose
+valid_norm <- valid_df
+
+names(train_df)
+
+norm_values <- preProcess(train_df_rose[, -c(1)],
+                          method = c("center",
+                                     "scale"))
+train_norm[, -c(1)] <- predict(norm_values,
+                                train_df_rose[, -c(1)])
+
+head(train_norm)
+```
+
+```{r}
+# Apply to validation set 
+valid_norm[, -c(1)] <- predict(norm_values,
+                                valid_df[, -c(1)])
+
+head(valid_norm)
+```
+
+```{r}
+# drop missing values
+valid_norm <- drop_na(valid_norm)
+```
+
+```{r}
+# Train kNN model using k = 5
+knn_model <- caret::knn3(TARGET ~ ., data = train_norm, k = 5)
+```
+
+```{r}
+# Prediction on training set
+knn_pred_train <- predict(knn_model, newdata = train_norm[, -c(1)],
+                          type = "class")
+head(knn_pred_train)
+```
+
+```{r}
+# Prediction on validation set 
+knn_pred_valid <- predict(knn_model, newdata = valid_norm[, -c(1)],
+                          type = "class")
+head(knn_pred_valid)
+```
+
+```{r}
+# Confusion matrix on training set 
+confusionMatrix(knn_pred_train, as.factor(train_norm[, 1]),
+                positive = "1")
+```
+
+```{r}
+# Confusion matrix on validation set 
+confusionMatrix(knn_pred_valid, as.factor(valid_norm[, 1]),
+                positive = "1")
+```
+
+Model Evaluation
+
+```{r}
+library(ROSE)
+
+ROSE::roc.curve(valid_norm$TARGET, knn_pred_valid)
+```
+
+Decision Tree Model
+
+```{r}
+# Load data for decision tree model and add new fields again
+data1 <- read.csv("credit_fa2023_23.csv", header = TRUE)
+data1$Income_Credit_Ratio <- NA
+
+for (i in 1:nrow(data1)) {
+  data1$Income_Credit_Ratio[i] <- data1$AMT_INCOME_TOTAL[i] / data1$AMT_CREDIT[i]
+}
+
+for (i in 1:nrow(data1)) {
+  data1$Annuity_Income_Ratio[i] <- data1$AMT_ANNUITY[i] / data1$AMT_INCOME_TOTAL[i]
+}
+
+for (i in 1:nrow(data1)) {
+  data1$Credit_As_Percentage[i] <- data1$AMT_CREDIT[i] / data1$AMT_INCOME_TOTAL[i]
+}
+
+for (i in 1:nrow(data1)) {
+  data1$Percent_Days_Employed[i] <- data1$DAYS_EMPLOYED[i] / data1$DAYS_BIRTH[i]
+}
+
+for (i in 1:nrow(data1)) {
+  data1$Income_Per_Person[i] <- data1$AMT_INCOME_TOTAL[i] / data1$CNT_FAM_MEMBERS[i]
+}
+
+#Remove XNA from CODE_GENDER variable
+data1 <- data1[data1$CODE_GENDER != "XNA", ]
+```
+
+```{r}
+#Save modified data into new data variable. Investigate data
+data <- data1
+names(data)
+str(data)
+head(data)
+```
+
+```{r}
+set.seed(666)
+train_index <- sample(1:nrow(data), 0.7 * nrow(data))
+valid_index <- setdiff(1:nrow(data), train_index)
+train_df <- data[train_index, ]
+valid_df <- data[valid_index, ]
+nrow(train_df)
+nrow(valid_df)
+head(train_df)
+head(valid_df)
+str(train_df)
+str(valid_df)
+```
+
+```{r}
+table(train_df$CODE_GENDER)
+```
+
+```{r}
+#Variable list
+#Income_Credit_Ratio + Annuity_Income_Ratio + Credit_As_Percentage + Percent_Days_Employed + Income_Per_Person + REGION_RATING_CLIENT_W_CITY + AMT_CREDIT + AMT_GOODS_PRICE + OWN_CAR_AGE + NAME_EDUCATION_TYPE + ORGANIZATION_TYPE
+```
+
+```{r}
+#Convert all categorical variables into factors
+train_df$OCCUPATION_TYPE <- as.factor(train_df$OCCUPATION_TYPE)
+train_df$ORGANIZATION_TYPE <- as.factor(train_df$ORGANIZATION_TYPE)
+train_df$NAME_EDUCATION_TYPE <- as.factor(train_df$NAME_EDUCATION_TYPE)
+train_df <- train_df[train_df$CODE_GENDER != "XNA", ]
+
+
+#Use ROSE to oversample target variable in order to balance model
+train_df_rose <- ROSE(TARGET ~ Percent_Days_Employed + NAME_EDUCATION_TYPE + REGION_RATING_CLIENT_W_CITY + AMT_GOODS_PRICE + ORGANIZATION_TYPE,
+                      data = train_df, seed = 666)$data
+
+table(train_df_rose$TARGET)
+```
+
+```{r}
+#Create classification decision tree with relevant fields
+class_tr_cl <- rpart(TARGET ~ Percent_Days_Employed + NAME_EDUCATION_TYPE + REGION_RATING_CLIENT_W_CITY + AMT_GOODS_PRICE + ORGANIZATION_TYPE,
+                    data = train_df_rose, method = "class", control = rpart.control(cp = 0.004))
+
+prp(class_tr_cl, cex = 0.8, tweak = 1)
+```
+
+```{r}
+#Apply classificiation decision tree to training set and validation set 
+class_tr_train_predict <- predict(class_tr_cl, train_df_rose,
+                                  type = "class")
+class_tr_valid <- predict(class_tr_cl, valid_df,
+                                  type = "class")
+```
+
+```{r}
+#Check confusion matrix of training and validation model to determine model's accuracy and overall effectiveness
+train_df_rose$TARGET <- as.factor(train_df_rose$TARGET)
+valid_df$TARGET <- as.factor(valid_df$TARGET)
+confusionMatrix(class_tr_train_predict, train_df_rose$TARGET, positive = "1")
+confusionMatrix(class_tr_valid, valid_df$TARGET, positive = "1")
+```
+
+```{r}
+library(ROSE)
+ROSE::roc.curve(valid_df$TARGET, class_tr_valid)
+
+```
+
+```{r}
+class_tr_rf <- randomForest(TARGET ~ Percent_Days_Employed + NAME_EDUCATION_TYPE + REGION_RATING_CLIENT_W_CITY + AMT_GOODS_PRICE, 
+                            data = train_df_rose, ntree = 200,
+                            nodesize = 5, importance = TRUE)
+```
+
+```{r}
+class_tr_rf_pred_train <- predict(class_tr_rf, train_df_rose)
+class_tr_rf_pred_valid <- predict(class_tr_rf, valid_df)
+confusionMatrix(class_tr_rf_pred_train, train_df_rose$TARGET, positive = "1")
+confusionMatrix(class_tr_rf_pred_valid, valid_df$TARGET, positive = "1")
+```
+
+```{r}
+names(train_df_rose)
+```
+
+```{r}
+names(valid_df)
+```
+
+```{r}
+# Load new customer data
+test <- read.csv("credit_test_fa2023_23.csv", header = TRUE)
+
+# Predict risk of new customers
+
+```
+
+Write-up:
+
+Problem Description:
+
+Stark Enterprises decided it wanted to branch out into the financial industry. They want to create a model to assist them in this endeavor.
+
+Objective: Create a model to predict which customers for a loan are likely to be high risk.
+
+Data description: The data includes the characteristics and financial situation of our customers. This includes fields which are stricly personal, like their gender and education, and fields which are finance-related, like their income and loan annuity
+
+Data Modifications: percent_days_employed was created by dividing Days employed by customer's age. The target variable for the training set was also oversampled to raise sensitivity.
+
+Both models were tailored to sensitivity. As a company which is branching into a new industry, it may be more important for them to catch all high risk customers to prevent losses. We chose to select the decision tree model because it was better at distinguishing risk (58.4% AUC to 56.6% AUC). Our chosen model correctly identifies high risk candidates 63.75% of the time. While this metric is high, the model pays for it with a lower accuracy of 55.04% and a low pos pred value of 24.35%. What this means is that this model has a tendency to incorrectly classify low risk candidates as high risk candidates. While this is regrettable, improving this metric would necessitate a reduction in sensitivity, which would be dangerous as more high risk customers would slip under the radar. Looking at it another way, 86.02% of low risk predictions are accurate, meaning that \~14% of low risk candidates may be at risk of being unfairly rejected due to this model. The question of the efficacy of this model therefore lies in what the revenue lost will be from 14% of low risk candidates rejected vs. the potential revenue loss from giving loans to more high-risk candidates. Ultimately, as Stark Enterprises becomes more established, we believe the model could be tweaked to have less false positives, at the expense of false negatives, in order to give out more loans.
+
+```         
+ Accuracy : 0.5504          
+                 95% CI : (0.5401, 0.5608)
+    No Information Rate : 0.8081          
+    P-Value [Acc > NIR] : 1               
+                                          
+                  Kappa : 0.1035          
+                                          
+ Mcnemar's Test P-Value : <2e-16          
+                                          
+            Sensitivity : 0.6375          
+            Specificity : 0.5298          
+         Pos Pred Value : 0.2435          
+         Neg Pred Value : 0.8602          
+             Prevalence : 0.1919          
+         Detection Rate : 0.1223          
+   Detection Prevalence : 0.5023          
+      Balanced Accuracy : 0.5836          
+```
