@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.433">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>Decision Tree Lab</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="Lab2_Rios_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Lab2_Rios_files/libs/quarto-html/quarto.js"></script>
+<script src="Lab2_Rios_files/libs/quarto-html/popper.min.js"></script>
+<script src="Lab2_Rios_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Lab2_Rios_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Lab2_Rios_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Lab2_Rios_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Lab2_Rios_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Lab2_Rios_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Lab2_Rios_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Decision Tree Lab</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1. Set up ---------------------------------------------------------------</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 1.1 Libraries ------------------------------------------------------------</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rpart)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(rpart.plot)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(forecast)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Registered S3 method overwritten by 'quantmod':
+  method            from
+  as.zoo.data.frame zoo </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: ggplot2</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Loading required package: lattice</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1.2 Load data ------------------------------------------------------------</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>toyota <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"ToyotaCorolla.csv"</span>, <span class="at">header =</span> <span class="cn">TRUE</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 1.3 Training validation split -------------------------------------------------------</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># convert fuel type to factor</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>toyota<span class="sc">$</span>Fuel_Type <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(toyota<span class="sc">$</span>Fuel_Type)</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">666</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>train_index <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(toyota), <span class="fl">0.6</span> <span class="sc">*</span> <span class="fu">nrow</span>(toyota))</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>valid_index <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(toyota), train_index)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>train_df <span class="ot">&lt;-</span> toyota[train_index, ]</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>valid_df <span class="ot">&lt;-</span> toyota[valid_index, ]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(train_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 861</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(valid_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 575</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(train_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       Id                                                 Model Price Age_08_04
+638   641 TOYOTA Corolla 1.3 16V WAGON LINEA TERRA Stationwagen  7995        59
+608   611     TOYOTA Corolla 2.0 DSL LIFTB LINEA LUNA 4/5-Doors  7500        62
+907   910    TOYOTA Corolla 1.6 16V HATCHB LINEA LUNA 2/3-Doors  9750        68
+1147 1152   TOYOTA Corolla 1.6 16V HATCHB LINEA TERRA 2/3-Doors  6900        74
+654   657     TOYOTA Corolla 1.6 16V LIFTB LINEA LUNA 4/5-Doors  9950        64
+873   876   TOYOTA Corolla 1.6 16V HATCHB LINEA TERRA 2/3-Doors 10295        67
+     Mfg_Month Mfg_Year     KM Fuel_Type  HP Met_Color  Color Automatic   CC
+638         10     1999 121626    Petrol  86         0    Red         0 1300
+608          7     1999 183500    Diesel  72         1 Silver         0 2000
+907          1     1999  58860    Petrol 110         1   Grey         0 1600
+1147         7     1998 101773    Petrol 110         0   Grey         0 1600
+654          5     1999 114846    Petrol 110         1  Green         0 1600
+873          2     1999  62316    Petrol 110         1   Grey         0 1600
+     Doors Cylinders Gears Quarterly_Tax Weight Mfr_Guarantee BOVAG_Guarantee
+638      5         4     5            69   1050             0               1
+608      5         4     5           185   1140             0               1
+907      3         4     5            85   1055             1               1
+1147     3         4     5            69   1050             0               1
+654      5         4     5            85   1075             1               1
+873      3         4     5            69   1050             1               1
+     Guarantee_Period ABS Airbag_1 Airbag_2 Airco Automatic_airco Boardcomputer
+638                 3   1        1        1     0               0             0
+608                 3   1        1        1     1               0             0
+907                 3   1        1        1     1               0             0
+1147                3   1        1        1     1               0             0
+654                 3   1        1        1     1               0             0
+873                 3   1        1        1     0               0             0
+     CD_Player Central_Lock Powered_Windows Power_Steering Radio Mistlamps
+638          0            0               0              1     0         0
+608          0            1               1              1     1         1
+907          0            1               1              1     0         1
+1147         0            0               0              1     0         0
+654          0            1               1              1     0         1
+873          0            1               1              1     1         0
+     Sport_Model Backseat_Divider Metallic_Rim Radio_cassette Parking_Assistant
+638            1                1            0              0                 0
+608            0                1            1              1                 0
+907            0                1            0              0                 0
+1147           1                1            0              0                 0
+654            0                1            1              0                 0
+873            0                1            1              1                 0
+     Tow_Bar
+638        0
+608        0
+907        1
+1147       0
+654        0
+873        1</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(valid_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Id                                                  Model Price Age_08_04
+2   2          TOYOTA Corolla 2.0 D4D HATCHB TERRA 2/3-Doors 13750        23
+3   3      \xa0TOYOTA Corolla 2.0 D4D HATCHB TERRA 2/3-Doors 13950        24
+6   6            TOYOTA Corolla 2.0 D4D HATCHB SOL 2/3-Doors 12950        32
+10 10        \xa0TOYOTA Corolla 1.9 D HATCHB TERRA 2/3-Doors 12950        23
+11 11      TOYOTA Corolla 1.8 VVTL-i T-Sport 3-Drs 2/3-Doors 20950        25
+12 12 TOYOTA Corolla 1.8 16V VVTLI 3DR T SPORT BNS 2/3-Doors 19950        22
+   Mfg_Month Mfg_Year    KM Fuel_Type  HP Met_Color  Color Automatic   CC Doors
+2         10     2002 72937    Diesel  90         1 Silver         0 2000     3
+3          9     2002 41711    Diesel  90         1   Blue         0 2000     3
+6          1     2002 61000    Diesel  90         0  White         0 2000     3
+10        10     2002 71138    Diesel  69         0   Blue         0 1900     3
+11         8     2002 31461    Petrol 192         0 Silver         0 1800     3
+12        11     2002 43610    Petrol 192         0    Red         0 1800     3
+   Cylinders Gears Quarterly_Tax Weight Mfr_Guarantee BOVAG_Guarantee
+2          4     5           210   1165             0               1
+3          4     5           210   1165             1               1
+6          4     5           210   1170             0               1
+10         4     5           185   1105             0               1
+11         4     6           100   1185             1               1
+12         4     6           100   1185             1               1
+   Guarantee_Period ABS Airbag_1 Airbag_2 Airco Automatic_airco Boardcomputer
+2                 3   1        1        1     1               0             1
+3                 3   1        1        1     0               0             1
+6                 3   1        1        1     1               0             1
+10                3   1        1        1     1               0             1
+11               12   1        1        1     1               1             0
+12                3   1        1        1     1               1             1
+   CD_Player Central_Lock Powered_Windows Power_Steering Radio Mistlamps
+2          1            1               0              1     0         0
+3          0            0               0              1     0         0
+6          0            1               1              1     0         1
+10         0            0               0              1     0         0
+11         1            1               1              1     0         0
+12         0            1               1              1     0         1
+   Sport_Model Backseat_Divider Metallic_Rim Radio_cassette Parking_Assistant
+2            0                1            0              0                 0
+3            0                1            0              0                 0
+6            0                1            0              0                 0
+10           0                1            0              0                 0
+11           0                0            1              0                 0
+12           1                1            1              0                 0
+   Tow_Bar
+2        0
+3        0
+6        0
+10       0
+11       0
+12       0</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(train_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   861 obs. of  39 variables:
+ $ Id               : int  641 611 910 1152 657 876 655 1078 132 1130 ...
+ $ Model            : chr  "TOYOTA Corolla 1.3 16V WAGON LINEA TERRA Stationwagen" "TOYOTA Corolla 2.0 DSL LIFTB LINEA LUNA 4/5-Doors" "TOYOTA Corolla 1.6 16V HATCHB LINEA LUNA 2/3-Doors" "TOYOTA Corolla 1.6 16V HATCHB LINEA TERRA 2/3-Doors" ...
+ $ Price            : int  7995 7500 9750 6900 9950 10295 7950 7900 16250 7250 ...
+ $ Age_08_04        : int  59 62 68 74 64 67 68 75 20 80 ...
+ $ Mfg_Month        : int  10 7 1 7 5 2 1 6 1 1 ...
+ $ Mfg_Year         : int  1999 1999 1999 1998 1999 1999 1999 1998 2003 1998 ...
+ $ KM               : int  121626 183500 58860 101773 114846 62316 115071 150000 32627 110887 ...
+ $ Fuel_Type        : Factor w/ 3 levels "CNG","Diesel",..: 3 2 3 3 3 3 3 2 3 3 ...
+ $ HP               : int  86 72 110 110 110 110 110 72 97 110 ...
+ $ Met_Color        : int  0 1 1 0 1 1 1 1 1 1 ...
+ $ Color            : chr  "Red" "Silver" "Grey" "Grey" ...
+ $ Automatic        : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ CC               : int  1300 2000 1600 1600 1600 1600 1600 2000 1400 1600 ...
+ $ Doors            : int  5 5 3 3 5 3 3 3 5 3 ...
+ $ Cylinders        : int  4 4 4 4 4 4 4 4 4 4 ...
+ $ Gears            : int  5 5 5 5 5 5 5 5 5 5 ...
+ $ Quarterly_Tax    : int  69 185 85 69 85 69 85 64 85 85 ...
+ $ Weight           : int  1050 1140 1055 1050 1075 1050 1055 1135 1110 1055 ...
+ $ Mfr_Guarantee    : int  0 0 1 0 1 1 0 0 0 0 ...
+ $ BOVAG_Guarantee  : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ Guarantee_Period : int  3 3 3 3 3 3 3 3 3 3 ...
+ $ ABS              : int  1 1 1 1 1 1 1 0 1 0 ...
+ $ Airbag_1         : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ Airbag_2         : int  1 1 1 1 1 1 1 0 1 0 ...
+ $ Airco            : int  0 1 1 1 1 0 1 0 1 0 ...
+ $ Automatic_airco  : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Boardcomputer    : int  0 0 0 0 0 0 0 0 1 0 ...
+ $ CD_Player        : int  0 0 0 0 0 0 1 0 1 0 ...
+ $ Central_Lock     : int  0 1 1 0 1 1 1 0 1 1 ...
+ $ Powered_Windows  : int  0 1 1 0 1 1 1 0 1 1 ...
+ $ Power_Steering   : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ Radio            : int  0 1 0 0 0 1 0 0 0 0 ...
+ $ Mistlamps        : int  0 1 1 0 1 0 1 0 0 1 ...
+ $ Sport_Model      : int  1 0 0 1 0 0 0 0 1 0 ...
+ $ Backseat_Divider : int  1 1 1 1 1 1 1 0 1 1 ...
+ $ Metallic_Rim     : int  0 1 0 0 1 1 0 0 0 0 ...
+ $ Radio_cassette   : int  0 1 0 0 0 1 0 0 0 0 ...
+ $ Parking_Assistant: int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Tow_Bar          : int  0 0 1 0 0 1 1 0 0 0 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(valid_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>'data.frame':   575 obs. of  39 variables:
+ $ Id               : int  2 3 6 10 11 12 14 17 19 22 ...
+ $ Model            : chr  "TOYOTA Corolla 2.0 D4D HATCHB TERRA 2/3-Doors" "\xa0TOYOTA Corolla 2.0 D4D HATCHB TERRA 2/3-Doors" "TOYOTA Corolla 2.0 D4D HATCHB SOL 2/3-Doors" "\xa0TOYOTA Corolla 1.9 D HATCHB TERRA 2/3-Doors" ...
+ $ Price            : int  13750 13950 12950 12950 20950 19950 21500 22750 16750 16950 ...
+ $ Age_08_04        : int  23 24 32 23 25 22 31 30 24 29 ...
+ $ Mfg_Month        : int  10 9 1 10 8 11 2 3 9 4 ...
+ $ Mfg_Year         : int  2002 2002 2002 2002 2002 2002 2002 2002 2002 2002 ...
+ $ KM               : int  72937 41711 61000 71138 31461 43610 23000 34000 25563 43905 ...
+ $ Fuel_Type        : Factor w/ 3 levels "CNG","Diesel",..: 2 2 2 2 3 3 3 3 3 3 ...
+ $ HP               : int  90 90 90 69 192 192 192 192 110 110 ...
+ $ Met_Color        : int  1 1 0 0 0 0 1 1 0 0 ...
+ $ Color            : chr  "Silver" "Blue" "White" "Blue" ...
+ $ Automatic        : int  0 0 0 0 0 0 0 0 0 1 ...
+ $ CC               : int  2000 2000 2000 1900 1800 1800 1800 1800 1600 1600 ...
+ $ Doors            : int  3 3 3 3 3 3 3 3 3 3 ...
+ $ Cylinders        : int  4 4 4 4 4 4 4 4 4 4 ...
+ $ Gears            : int  5 5 5 5 6 6 6 5 5 5 ...
+ $ Quarterly_Tax    : int  210 210 210 185 100 100 100 100 19 100 ...
+ $ Weight           : int  1165 1165 1170 1105 1185 1185 1185 1185 1065 1170 ...
+ $ Mfr_Guarantee    : int  0 1 0 0 1 1 1 0 0 0 ...
+ $ BOVAG_Guarantee  : int  1 1 1 1 1 1 1 1 0 1 ...
+ $ Guarantee_Period : int  3 3 3 3 12 3 3 3 3 3 ...
+ $ ABS              : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ Airbag_1         : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ Airbag_2         : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ Airco            : int  1 0 1 1 1 1 1 1 1 1 ...
+ $ Automatic_airco  : int  0 0 0 0 1 1 1 1 1 1 ...
+ $ Boardcomputer    : int  1 1 1 1 0 1 1 1 1 1 ...
+ $ CD_Player        : int  1 0 0 0 1 0 1 1 1 0 ...
+ $ Central_Lock     : int  1 0 1 0 1 1 1 1 1 1 ...
+ $ Powered_Windows  : int  0 0 1 0 1 1 1 1 1 1 ...
+ $ Power_Steering   : int  1 1 1 1 1 1 1 1 1 1 ...
+ $ Radio            : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Mistlamps        : int  0 0 1 0 0 1 1 1 1 1 ...
+ $ Sport_Model      : int  0 0 0 0 0 1 1 0 0 1 ...
+ $ Backseat_Divider : int  1 1 1 1 0 1 1 1 0 1 ...
+ $ Metallic_Rim     : int  0 0 0 0 1 1 1 1 0 0 ...
+ $ Radio_cassette   : int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Parking_Assistant: int  0 0 0 0 0 0 0 0 0 0 ...
+ $ Tow_Bar          : int  0 0 0 0 0 0 0 0 0 0 ...</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(train_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Id"                "Model"             "Price"            
+ [4] "Age_08_04"         "Mfg_Month"         "Mfg_Year"         
+ [7] "KM"                "Fuel_Type"         "HP"               
+[10] "Met_Color"         "Color"             "Automatic"        
+[13] "CC"                "Doors"             "Cylinders"        
+[16] "Gears"             "Quarterly_Tax"     "Weight"           
+[19] "Mfr_Guarantee"     "BOVAG_Guarantee"   "Guarantee_Period" 
+[22] "ABS"               "Airbag_1"          "Airbag_2"         
+[25] "Airco"             "Automatic_airco"   "Boardcomputer"    
+[28] "CD_Player"         "Central_Lock"      "Powered_Windows"  
+[31] "Power_Steering"    "Radio"             "Mistlamps"        
+[34] "Sport_Model"       "Backseat_Divider"  "Metallic_Rim"     
+[37] "Radio_cassette"    "Parking_Assistant" "Tow_Bar"          </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2 and 3. Regression tree ------------------------------------------------------</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 2.1 Build the regression tree</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>regress_tr <span class="ot">&lt;-</span> <span class="fu">rpart</span>(Price <span class="sc">~</span> Age_08_04 <span class="sc">+</span> KM <span class="sc">+</span> Fuel_Type <span class="sc">+</span> HP <span class="sc">+</span> Automatic <span class="sc">+</span> Doors <span class="sc">+</span> Quarterly_Tax <span class="sc">+</span> Mfr_Guarantee <span class="sc">+</span> Guarantee_Period <span class="sc">+</span> Airco <span class="sc">+</span> Automatic_airco <span class="sc">+</span> CD_Player <span class="sc">+</span> Powered_Windows <span class="sc">+</span> Sport_Model <span class="sc">+</span> Tow_Bar[],</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>                    <span class="at">data =</span> train_df, <span class="at">method =</span> <span class="st">"anova"</span>, <span class="at">maxdepth =</span> <span class="dv">3</span>) <span class="co">#set maxdepth at 3</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the tree </span></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a><span class="fu">rpart.plot</span>(regress_tr, <span class="at">type =</span> <span class="dv">4</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Lab2_Rios_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2.2 Predict the training and validation sets ----------------------------------------------------------</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="co"># training set</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>predict_train <span class="ot">&lt;-</span> <span class="fu">predict</span>(regress_tr, train_df)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="fu">accuracy</span>(predict_train, train_df<span class="sc">$</span>Price)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                    ME     RMSE      MAE       MPE     MAPE
+Test set -3.485868e-13 1350.029 997.7624 -1.697795 10.04859</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># validation set</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>predict_valid <span class="ot">&lt;-</span> <span class="fu">predict</span>(regress_tr, valid_df)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">accuracy</span>(predict_valid, valid_df<span class="sc">$</span>Price)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>               ME     RMSE      MAE       MPE     MAPE
+Test set 83.72084 1500.804 1082.922 -1.184133 10.38819</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Compare the RMSE:</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co"># The RMSE of the training set is off by ~$1,350 on average, the validation set is off by ~$1,500 on average</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 3. Predict new record using regression tree ----------------------------</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="co"># create df of new record</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co"># manually add the variables</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>new_record <span class="ot">&lt;-</span> <span class="fu">data.frame</span>(<span class="at">Age_08_04 =</span> <span class="dv">77</span>, </span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>                         <span class="at">KM =</span> <span class="dv">117000</span>, </span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Fuel_Type =</span> <span class="st">"Petrol"</span>, </span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>                         <span class="at">HP =</span> <span class="dv">110</span>, </span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Automatic =</span> <span class="dv">0</span>, </span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Doors =</span> <span class="dv">5</span>, </span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Quarterly_Tax =</span> <span class="dv">100</span>, </span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Mfr_Guarantee =</span> <span class="dv">0</span>, </span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Guarantee_Period =</span> <span class="dv">3</span>, </span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Airco =</span> <span class="dv">1</span>, </span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Automatic_airco =</span> <span class="dv">0</span>, </span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>                         <span class="at">CD_Player =</span> <span class="dv">0</span>, </span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Powered_Windows =</span> <span class="dv">0</span>, </span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Sport_Model =</span> <span class="dv">0</span>, </span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>                         <span class="at">Tow_Bar =</span> <span class="dv">1</span>)</span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a><span class="co"># predict the price of the new record</span></span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>regress_tr_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(regress_tr, <span class="at">newdata =</span> new_record)</span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>regress_tr_pred</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       1 
+7969.592 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4. Classification tree --------------------------------------------------</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.1 Binning -------------------------------------------------------------</span></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>toyota<span class="sc">$</span>cat_price <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(toyota<span class="sc">$</span>Price <span class="sc">&lt;=</span> <span class="fu">mean</span>(toyota<span class="sc">$</span>Price, <span class="at">na.rm =</span> <span class="cn">TRUE</span>), <span class="st">"0"</span>, <span class="st">"1"</span>)</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(toyota<span class="sc">$</span>cat_price)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+  0   1 
+895 541 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>toyota<span class="sc">$</span>cat_price <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(toyota<span class="sc">$</span>cat_price)</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove the numerical Price variable to avoid </span></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>toyota_cat <span class="ot">&lt;-</span> toyota[,<span class="sc">-</span> <span class="fu">c</span>(<span class="dv">3</span>)]</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(toyota_cat)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "Id"                "Model"             "Age_08_04"        
+ [4] "Mfg_Month"         "Mfg_Year"          "KM"               
+ [7] "Fuel_Type"         "HP"                "Met_Color"        
+[10] "Color"             "Automatic"         "CC"               
+[13] "Doors"             "Cylinders"         "Gears"            
+[16] "Quarterly_Tax"     "Weight"            "Mfr_Guarantee"    
+[19] "BOVAG_Guarantee"   "Guarantee_Period"  "ABS"              
+[22] "Airbag_1"          "Airbag_2"          "Airco"            
+[25] "Automatic_airco"   "Boardcomputer"     "CD_Player"        
+[28] "Central_Lock"      "Powered_Windows"   "Power_Steering"   
+[31] "Radio"             "Mistlamps"         "Sport_Model"      
+[34] "Backseat_Divider"  "Metallic_Rim"      "Radio_cassette"   
+[37] "Parking_Assistant" "Tow_Bar"           "cat_price"        </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.2 Training validation split -------------------------------------------</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">666</span>)</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>train_cat_index <span class="ot">&lt;-</span> <span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(toyota_cat), <span class="fl">0.6</span> <span class="sc">*</span> <span class="fu">nrow</span>(toyota_cat))</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>valid_cat_index <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="dv">1</span><span class="sc">:</span><span class="fu">nrow</span>(toyota_cat), train_cat_index)</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>train_cat_df <span class="ot">&lt;-</span> toyota_cat[train_cat_index, ]</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>valid_cat_df <span class="ot">&lt;-</span> toyota_cat[valid_cat_index, ]</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a><span class="co"># check</span></span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(train_cat_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 861</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(valid_cat_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 575</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(train_cat_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       Id                                                 Model Age_08_04
+638   641 TOYOTA Corolla 1.3 16V WAGON LINEA TERRA Stationwagen        59
+608   611     TOYOTA Corolla 2.0 DSL LIFTB LINEA LUNA 4/5-Doors        62
+907   910    TOYOTA Corolla 1.6 16V HATCHB LINEA LUNA 2/3-Doors        68
+1147 1152   TOYOTA Corolla 1.6 16V HATCHB LINEA TERRA 2/3-Doors        74
+654   657     TOYOTA Corolla 1.6 16V LIFTB LINEA LUNA 4/5-Doors        64
+873   876   TOYOTA Corolla 1.6 16V HATCHB LINEA TERRA 2/3-Doors        67
+     Mfg_Month Mfg_Year     KM Fuel_Type  HP Met_Color  Color Automatic   CC
+638         10     1999 121626    Petrol  86         0    Red         0 1300
+608          7     1999 183500    Diesel  72         1 Silver         0 2000
+907          1     1999  58860    Petrol 110         1   Grey         0 1600
+1147         7     1998 101773    Petrol 110         0   Grey         0 1600
+654          5     1999 114846    Petrol 110         1  Green         0 1600
+873          2     1999  62316    Petrol 110         1   Grey         0 1600
+     Doors Cylinders Gears Quarterly_Tax Weight Mfr_Guarantee BOVAG_Guarantee
+638      5         4     5            69   1050             0               1
+608      5         4     5           185   1140             0               1
+907      3         4     5            85   1055             1               1
+1147     3         4     5            69   1050             0               1
+654      5         4     5            85   1075             1               1
+873      3         4     5            69   1050             1               1
+     Guarantee_Period ABS Airbag_1 Airbag_2 Airco Automatic_airco Boardcomputer
+638                 3   1        1        1     0               0             0
+608                 3   1        1        1     1               0             0
+907                 3   1        1        1     1               0             0
+1147                3   1        1        1     1               0             0
+654                 3   1        1        1     1               0             0
+873                 3   1        1        1     0               0             0
+     CD_Player Central_Lock Powered_Windows Power_Steering Radio Mistlamps
+638          0            0               0              1     0         0
+608          0            1               1              1     1         1
+907          0            1               1              1     0         1
+1147         0            0               0              1     0         0
+654          0            1               1              1     0         1
+873          0            1               1              1     1         0
+     Sport_Model Backseat_Divider Metallic_Rim Radio_cassette Parking_Assistant
+638            1                1            0              0                 0
+608            0                1            1              1                 0
+907            0                1            0              0                 0
+1147           1                1            0              0                 0
+654            0                1            1              0                 0
+873            0                1            1              1                 0
+     Tow_Bar cat_price
+638        0         0
+608        0         0
+907        1         0
+1147       0         0
+654        0         0
+873        1         0</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(valid_cat_df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   Id                                                  Model Age_08_04
+2   2          TOYOTA Corolla 2.0 D4D HATCHB TERRA 2/3-Doors        23
+3   3      \xa0TOYOTA Corolla 2.0 D4D HATCHB TERRA 2/3-Doors        24
+6   6            TOYOTA Corolla 2.0 D4D HATCHB SOL 2/3-Doors        32
+10 10        \xa0TOYOTA Corolla 1.9 D HATCHB TERRA 2/3-Doors        23
+11 11      TOYOTA Corolla 1.8 VVTL-i T-Sport 3-Drs 2/3-Doors        25
+12 12 TOYOTA Corolla 1.8 16V VVTLI 3DR T SPORT BNS 2/3-Doors        22
+   Mfg_Month Mfg_Year    KM Fuel_Type  HP Met_Color  Color Automatic   CC Doors
+2         10     2002 72937    Diesel  90         1 Silver         0 2000     3
+3          9     2002 41711    Diesel  90         1   Blue         0 2000     3
+6          1     2002 61000    Diesel  90         0  White         0 2000     3
+10        10     2002 71138    Diesel  69         0   Blue         0 1900     3
+11         8     2002 31461    Petrol 192         0 Silver         0 1800     3
+12        11     2002 43610    Petrol 192         0    Red         0 1800     3
+   Cylinders Gears Quarterly_Tax Weight Mfr_Guarantee BOVAG_Guarantee
+2          4     5           210   1165             0               1
+3          4     5           210   1165             1               1
+6          4     5           210   1170             0               1
+10         4     5           185   1105             0               1
+11         4     6           100   1185             1               1
+12         4     6           100   1185             1               1
+   Guarantee_Period ABS Airbag_1 Airbag_2 Airco Automatic_airco Boardcomputer
+2                 3   1        1        1     1               0             1
+3                 3   1        1        1     0               0             1
+6                 3   1        1        1     1               0             1
+10                3   1        1        1     1               0             1
+11               12   1        1        1     1               1             0
+12                3   1        1        1     1               1             1
+   CD_Player Central_Lock Powered_Windows Power_Steering Radio Mistlamps
+2          1            1               0              1     0         0
+3          0            0               0              1     0         0
+6          0            1               1              1     0         1
+10         0            0               0              1     0         0
+11         1            1               1              1     0         0
+12         0            1               1              1     0         1
+   Sport_Model Backseat_Divider Metallic_Rim Radio_cassette Parking_Assistant
+2            0                1            0              0                 0
+3            0                1            0              0                 0
+6            0                1            0              0                 0
+10           0                1            0              0                 0
+11           0                0            1              0                 0
+12           1                1            1              0                 0
+   Tow_Bar cat_price
+2        0         1
+3        0         1
+6        0         1
+10       0         1
+11       0         1
+12       0         1</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.3 Classification tree -------------------------------------------------</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>class_tr <span class="ot">&lt;-</span> <span class="fu">rpart</span>(cat_price <span class="sc">~</span> Age_08_04 <span class="sc">+</span> KM <span class="sc">+</span> Fuel_Type <span class="sc">+</span> HP <span class="sc">+</span> Automatic <span class="sc">+</span> </span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>                    Doors <span class="sc">+</span> Quarterly_Tax <span class="sc">+</span> Mfr_Guarantee <span class="sc">+</span> Guarantee_Period</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>                  <span class="sc">+</span> Airco <span class="sc">+</span> Automatic_airco <span class="sc">+</span> CD_Player <span class="sc">+</span> Powered_Windows <span class="sc">+</span> </span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>                    Sport_Model <span class="sc">+</span> Tow_Bar,</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">data =</span> train_cat_df, <span class="at">method =</span> <span class="st">"class"</span>,</span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>                  <span class="at">maxdepth =</span> <span class="dv">3</span>) <span class="co"># set maxdepth = 3</span></span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the tree</span></span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a><span class="fu">prp</span>(class_tr, <span class="at">cex =</span> <span class="fl">0.8</span>, <span class="at">tweak =</span> <span class="dv">1</span>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="Lab2_Rios_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># what is/are the top predictors?</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="co"># The top predictor is the variable Age_08_0, splitting at &gt;= 57 </span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a><span class="co"># training set confusion matrix </span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>class_tr_train_predict <span class="ot">&lt;-</span> <span class="fu">predict</span>(class_tr, train_cat_df,</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">type =</span> <span class="st">"class"</span>)</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a><span class="fu">t</span>(<span class="fu">t</span>(<span class="fu">head</span>(class_tr_train_predict,<span class="dv">10</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     [,1]
+638  0   
+608  0   
+907  0   
+1147 0   
+654  0   
+873  0   
+652  0   
+1074 0   
+131  1   
+1125 0   
+Levels: 0 1</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># validation confusion matrix</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(class_tr_train_predict, train_cat_df[, <span class="dv">39</span>], <span class="at">positive =</span> <span class="st">"1"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction   0   1
+         0 489  24
+         1  62 286
+                                          
+               Accuracy : 0.9001          
+                 95% CI : (0.8781, 0.9193)
+    No Information Rate : 0.64            
+    P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+                                          
+                  Kappa : 0.7889          
+                                          
+ Mcnemar's Test P-Value : 6.613e-05       
+                                          
+            Sensitivity : 0.9226          
+            Specificity : 0.8875          
+         Pos Pred Value : 0.8218          
+         Neg Pred Value : 0.9532          
+             Prevalence : 0.3600          
+         Detection Rate : 0.3322          
+   Detection Prevalence : 0.4042          
+      Balanced Accuracy : 0.9050          
+                                          
+       'Positive' Class : 1               
+                                          </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># validation set</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>class_tr_valid_predict <span class="ot">&lt;-</span> <span class="fu">predict</span>(class_tr, valid_df,</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">type =</span> <span class="st">"class"</span>)</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a><span class="fu">t</span>(<span class="fu">t</span>(<span class="fu">head</span>(class_tr_valid_predict,<span class="dv">10</span>)))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   [,1]
+2  1   
+3  1   
+6  1   
+10 1   
+11 1   
+12 1   
+14 1   
+17 1   
+19 1   
+22 1   
+Levels: 0 1</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the probabilities</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">confusionMatrix</span>(class_tr_valid_predict, valid_cat_df[, <span class="dv">39</span>], <span class="at">positive =</span> <span class="st">"1"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Confusion Matrix and Statistics
+
+          Reference
+Prediction   0   1
+         0 310  29
+         1  34 202
+                                         
+               Accuracy : 0.8904         
+                 95% CI : (0.862, 0.9148)
+    No Information Rate : 0.5983         
+    P-Value [Acc &gt; NIR] : &lt;2e-16         
+                                         
+                  Kappa : 0.7729         
+                                         
+ Mcnemar's Test P-Value : 0.6143         
+                                         
+            Sensitivity : 0.8745         
+            Specificity : 0.9012         
+         Pos Pred Value : 0.8559         
+         Neg Pred Value : 0.9145         
+             Prevalence : 0.4017         
+         Detection Rate : 0.3513         
+   Detection Prevalence : 0.4104         
+      Balanced Accuracy : 0.8878         
+                                         
+       'Positive' Class : 1              
+                                         </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># probabilities </span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>class_tr_valid_predict_prob <span class="ot">&lt;-</span> <span class="fu">predict</span>(class_tr, valid_df,</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">type =</span> <span class="st">"prob"</span>)</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(class_tr_valid_predict_prob)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>            0         1
+2  0.04954955 0.9504505
+3  0.04954955 0.9504505
+6  0.04954955 0.9504505
+10 0.04954955 0.9504505
+11 0.04954955 0.9504505
+12 0.04954955 0.9504505</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The accuracy of the training set (90%) are similar to that of the validation set (89%)</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(toyota<span class="sc">$</span>Price)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 10730.82</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb57"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 4.4 Predict new record --------------------------------------------------</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a>class_tr_pred <span class="ot">&lt;-</span> <span class="fu">predict</span>(class_tr, <span class="at">newdata =</span> new_record)</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a>class_tr_pred</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          0          1
+1 0.9521912 0.04780876</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb59"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 5. Comparing the trees --------------------------------------------------</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a><span class="co"># The predictors between the regression tree and the classification tree are similar, both placing a heavy emphasis on the Age_08_01 variable in nodes</span></span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a><span class="co"># The predictions show to be somewhat similar based on what were able to know. We know that the mean price is 10,730 and the 95% prediction 0 indicates the new record is below this value. Considering the estimated price of 7,970 in the regression tree this indicates that the predictions are similar.</span></span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a><span class="co"># If I was running a business and wanted to predict the price of cars I would use the regression tree as it answers the question better of what the specific price is, as opposed to higher or lower than the mean value which could be useful but considering the size of the buckets doesnt lead to a very specific prediction. </span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
